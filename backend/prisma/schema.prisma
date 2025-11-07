@@ -19,6 +19,8 @@ datasource db {
 model Tenant {
   id          String     @id @default(cuid())
   name        String
+  email       String     @unique
+  password    String
   domain      String?    @unique
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
