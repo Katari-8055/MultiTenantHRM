@@ -41,7 +41,7 @@ model Employee {
 
   // LOGIN
   email             String   @unique
-  password          String
+  password          String?
   role              Role     @default(EMPLOYEE)
 
   // Profile Info
@@ -52,7 +52,9 @@ model Employee {
   gender            Gender? @default(OTHER)
   position          String?
 
-
+  // Initial Password Setup
+  setupToken        String?
+  setupTokenExpiry  DateTime?
 
   // Employment
   salary            Float?
