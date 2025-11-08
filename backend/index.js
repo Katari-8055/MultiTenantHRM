@@ -1,6 +1,7 @@
 import express from 'express';   
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import router from './routes/AuthRoute.js';
 
 dotenv.config();
@@ -9,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 
 const app = express();   
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan('dev'));
 
