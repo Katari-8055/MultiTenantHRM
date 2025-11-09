@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('TENANT_ADMIN', 'HR', 'MANAGER', 'EMPLOYEE');
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'HR', 'MANAGER', 'EMPLOYEE');
 
 -- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
@@ -11,7 +11,7 @@ CREATE TYPE "EmploymentType" AS ENUM ('FULL_TIME', 'PART_TIME', 'INTERN', 'CONTR
 CREATE TYPE "EmploymentStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'ON_LEAVE', 'TERMINATED');
 
 -- CreateEnum
-CREATE TYPE "Status" AS ENUM ('Ongoing', 'Pending', 'Cancelled', 'Completed');
+CREATE TYPE "Status" AS ENUM ('ONGOING', 'PENDING', 'CANCELLED', 'COMPLETED');
 
 -- CreateEnum
 CREATE TYPE "LeaveStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
@@ -29,6 +29,9 @@ CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'COMPLETED');
 CREATE TABLE "Tenant" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'ADMIN',
     "domain" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -40,7 +43,7 @@ CREATE TABLE "Tenant" (
 CREATE TABLE "Employee" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
     "role" "Role" NOT NULL DEFAULT 'EMPLOYEE',
     "firstName" TEXT NOT NULL,
     "lastName" TEXT,
@@ -48,6 +51,8 @@ CREATE TABLE "Employee" (
     "dateOfBirth" TIMESTAMP(3),
     "gender" "Gender" DEFAULT 'OTHER',
     "position" TEXT,
+    "setupToken" TEXT,
+    "setupTokenExpiry" TIMESTAMP(3),
     "salary" DOUBLE PRECISION,
     "dateOfJoining" TIMESTAMP(3),
     "employmentType" "EmploymentType" NOT NULL DEFAULT 'FULL_TIME',
@@ -68,7 +73,7 @@ CREATE TABLE "Project" (
     "name" TEXT NOT NULL,
     "client" TEXT NOT NULL,
     "description" TEXT,
-    "status" "Status" NOT NULL DEFAULT 'Ongoing',
+    "status" "Status" NOT NULL DEFAULT 'ONGOING',
     "deadline" TIMESTAMP(3),
     "managerId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -124,6 +129,9 @@ CREATE TABLE "Task" (
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Tenant_email_key" ON "Tenant"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Tenant_domain_key" ON "Tenant"("domain");
