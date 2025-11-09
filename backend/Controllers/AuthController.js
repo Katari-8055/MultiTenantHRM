@@ -59,7 +59,7 @@ export const login = asyncHandler(async (req, res, next) => {
         maxAge: 24 * 60 * 60 * 1000
     });
 
-    res.json({ message: "Login successful", tenant, token });
+    res.json({ message: "Login successful",role: 'TENANT_ADMIN', tenant, token });
 })
 
 
