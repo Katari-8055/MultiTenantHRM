@@ -7,7 +7,7 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 
-router.post('/addEmployee', AuthenticateMiddleware, authorize('TENANT_ADMIN', 'HR'), addEmployee);
+router.post('/addEmployee', AuthenticateMiddleware, authorize('ADMIN', 'HR'), addEmployee);
 router.post('/setPassword', setEmployeePassword);
 router.post('/employeeLogin', employeeLogin);
 
