@@ -50,7 +50,7 @@ export const login = asyncHandler(async (req, res, next) => {
         return res.json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ tenantId: tenant.id, role: 'TENANT_ADMIN' }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ tenantId: tenant.id, role: tenant.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     res.cookie('token', token, {
         httpOnly: true,
@@ -59,7 +59,7 @@ export const login = asyncHandler(async (req, res, next) => {
         maxAge: 24 * 60 * 60 * 1000
     });
 
-    res.json({ message: "Login successful",role: 'TENANT_ADMIN', tenant, token });
+    res.json({ message: "Login successful", tenant, token });
 })
 
 
