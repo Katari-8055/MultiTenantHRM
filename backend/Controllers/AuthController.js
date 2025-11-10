@@ -59,7 +59,7 @@ export const login = asyncHandler(async (req, res, next) => {
         maxAge: 24 * 60 * 60 * 1000
     });
 
-    res.json({ message: "Login successful", tenant, token });
+    res.json({ message: "Login successful",role: tenant.role, tenant, token });
 })
 
 
@@ -175,5 +175,5 @@ export const employeeLogin = asyncHandler(async (req, res, next) => {
         maxAge: 24 * 60 * 60 * 1000
     })
 
-    res.json({ message: "Login successful", employee, token });
+    res.json({ message: "Login successful",role: employee.role, employee, token });
 })
