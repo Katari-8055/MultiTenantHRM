@@ -67,16 +67,18 @@ export const login = asyncHandler(async (req, res, next) => {
 //---------------------------------------------Adding Employee By Tenant---------------------------------------------//
 
 export const addEmployee = asyncHandler(async (req, res, next) => {
-    const { firstName, email, role } = req.body;
+    const { firstName, email, role, salary, department } = req.body;
     const tenantId = req.tenantId;
 
     const tenant = await prisma.tenant.findUnique({
         where: { id: tenantId }
     });
 
-    const existingEmployee = await prisma.employee.findUnique({
-        where: { email }
-    })
+    const existingEmployee = await prisma.employee.findFirst({
+  where: { email, tenantId }
+});
+
+
 
     if (existingEmployee) {
         return res.status(400).json({ message: "Employee with this email already exists" });
@@ -86,6 +88,14 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
         return res.status(404).json({ message: "Tenant not found" });
     }
 
+    const departmentRecord = await prisma.department.findFirst({
+        where: {
+            name: department,
+            tenantId
+        }
+    });
+    const numericSalary = parseFloat(salary);
+
     const token = crypto.randomBytes(32).toString("hex");
 
     const newEmployee = await prisma.employee.create({
@@ -93,6 +103,8 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
             firstName,
             email,
             role,
+            salary: numericSalary,
+            departmentId: departmentRecord.id,
             tenantId: tenant.id,
             setupToken: token,
             setupTokenExpiry: new Date(Date.now() + 1000 * 60 * 60 * 24),
