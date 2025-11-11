@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import router from './routes/AuthRoute.js';
+import router1 from './routes/AdminRoute.js';
 import cors from 'cors';
 
 
@@ -25,6 +26,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', router);
+app.use('/api/admin', router1);
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
