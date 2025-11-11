@@ -1,15 +1,17 @@
-// import { createContext, useState } from "react";
-// import axios from "axios";
-
-// export const GlobleContext = createContext();
-
-// export const GlobleProvider = ({children}) =>{
-//     const [user, setUser] = useState();
+import { createContext, useState } from "react";
+import axios from "axios";
 
 
-//     return(
-//         <GlobleContext.Provider value={User, setUser}>
+export const GlobleContext = createContext();
 
-//         </GlobleContext.Provider>
-//     )
-// }
+export const GlobleProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+
+  
+
+  return (
+    <GlobleContext.Provider value={{ user, setUser }}>
+      {children}
+    </GlobleContext.Provider>
+  );
+};
