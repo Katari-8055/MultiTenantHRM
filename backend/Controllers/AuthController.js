@@ -177,3 +177,49 @@ export const employeeLogin = asyncHandler(async (req, res, next) => {
 
     res.json({ message: "Login successful",role: employee.role, employee, token });
 })
+
+//-----------------------------------------Get ME-----------------------------------//
+
+export const getMe = asyncHandler(async (req, res) => {
+  const { userRole, tenantId, employeeId } = req;
+
+  let user = null;
+
+  // If Admin/Tenant
+  if (tenantId && !employeeId) {
+    user = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        domain: true,
+      }
+    });
+  }
+
+  // If Employee
+  if (employeeId) {
+    user = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      select: {
+        id: true,
+        firstName: true,
+        email: true,
+        role: true,
+        tenantId: true,
+      }
+    });
+  }
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.json({
+    success: true,
+    user,
+    role: userRole,
+  });
+});
