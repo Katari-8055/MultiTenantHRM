@@ -6,6 +6,7 @@ import {
   Calendar,
   User,
   LogOut,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -13,7 +14,31 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-const HrSidebar = () => {
+const menuItems = [
+  { title: "Dashboard", to: "/admin/dashboard", icon: <LayoutDashboard size={20} /> },
+  { title: "Employee Management", to: "/admin/employee", icon: <Users size={20} /> },
+  { title: "Department Management", to: "/admin/department", icon: <CheckSquare size={20} /> },
+  { title: "Project Management", to: "/admin/project", icon: <Calendar size={20} /> },
+  { title: "Profile Management", to: "/admin/profile", icon: <Settings size={20} /> },
+];
+
+const NavItem = ({ collapsed, item }) => {
+  return (
+    <NavLink
+      to={item.to}
+      className={({ isActive }) =>
+        `flex items-center p-2 rounded-md cursor-pointer transition
+        ${collapsed ? "justify-center" : "space-x-3"}
+        hover:bg-gray-100 ${isActive ? "bg-gray-200 font-semibold" : ""}`
+      }
+    >
+      {item.icon}
+      {!collapsed && <span>{item.title}</span>}
+    </NavLink>
+  );
+};
+
+const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -26,7 +51,7 @@ const HrSidebar = () => {
       <div className="flex items-center justify-between p-4 border-b">
         {!collapsed && <h1 className="font-bold text-lg">HRConnect Pro</h1>}
 
-        {/* Desktop collapse button */}
+        {/* Desktop Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="p-2 rounded hover:bg-gray-100 hidden md:block"
@@ -47,7 +72,7 @@ const HrSidebar = () => {
       <div className="p-4 border-b">
         <button
           onClick={() => setProfileOpen(!profileOpen)}
-          className="flex items-center space-x-3 w-full hover:bg-gray-100 p-2 rounded cursor-pointer"
+          className="flex items-center space-x-3 w-full hover:bg-gray-100 p-2 rounded"
         >
           <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
             <User size={16} color="white" />
@@ -55,18 +80,17 @@ const HrSidebar = () => {
           {!collapsed && <span className="text-sm font-medium">{name}</span>}
         </button>
 
-        {profileOpen && (
+        {profileOpen && !collapsed && (
           <div className="mt-2 bg-white border rounded shadow-md">
             <NavLink
-              to="/hr/profile"
+              to="/admin/profile"
+              onClick={() => setProfileOpen(false)}
               className="block px-4 py-2 text-sm hover:bg-gray-100"
             >
               Profile
             </NavLink>
 
-            <button
-              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
-            >
+            <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2">
               <LogOut size={16} />
               <span>Logout</span>
             </button>
@@ -74,57 +98,14 @@ const HrSidebar = () => {
         )}
       </div>
 
-      {/* Navigation */}
-      <nav className="p-4 space-y-2 flex-1">
-        <NavLink
-          to="/hr/overview"
-          className={({ isActive }) =>
-            `flex items-center p-2 rounded-md cursor-pointer
-            ${collapsed ? "justify-center" : "space-x-3"}
-            hover:bg-gray-100 ${isActive ? "bg-gray-200 font-semibold" : ""}`
-          }
-        >
-          <LayoutDashboard size={20} />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
-
-        <NavLink
-          to="/hr/employeemanagement"
-          className={({ isActive }) =>
-            `flex items-center p-2 rounded-md cursor-pointer
-            ${collapsed ? "justify-center" : "space-x-3"}
-            hover:bg-gray-100 ${isActive ? "bg-gray-200 font-semibold" : ""}`
-          }
-        >
-          <Users size={20} />
-          {!collapsed && <span>Employee Management</span>}
-        </NavLink>
-
-        <NavLink
-          to="/hr/taskmanagement"
-          className={({ isActive }) =>
-            `flex items-center p-2 rounded-md cursor-pointer
-            ${collapsed ? "justify-center" : "space-x-3"}
-            hover:bg-gray-100 ${isActive ? "bg-gray-200 font-semibold" : ""}`
-          }
-        >
-          <CheckSquare size={20} />
-          {!collapsed && <span>Task Management</span>}
-        </NavLink>
-
-        <NavLink
-          to="/hr/leavemanagement"
-          className={({ isActive }) =>
-            `flex items-center p-2 rounded-md cursor-pointer
-            ${collapsed ? "justify-center" : "space-x-3"}
-            hover:bg-gray-100 ${isActive ? "bg-gray-200 font-semibold" : ""}`
-          }
-        >
-          <Calendar size={20} />
-          {!collapsed && <span>Leave Management</span>}
-        </NavLink>
+      {/* Menu */}
+      <nav className="p-1 space-y-2 flex-1">
+        {menuItems.map((item, index) => (
+          <NavItem key={index} collapsed={collapsed} item={item} />
+        ))}
       </nav>
 
+      {/* Footer */}
       <div className="p-4 border-t text-xs text-gray-500 text-center">
         © 2025 HRConnect Pro
       </div>
@@ -164,4 +145,4 @@ const HrSidebar = () => {
   );
 };
 
-export default HrSidebar;
+export default AdminSidebar;
