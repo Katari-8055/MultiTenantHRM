@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import React, { useContext } from "react";
-import Login from './pages/Auth/Login.jsx';
-import Home from './pages/Home.jsx';
-import SignUp from './pages/Auth/SignUp.jsx';
+import Login from "./pages/Auth/Login.jsx";
+import Home from "./pages/Home.jsx";
+import SignUp from "./pages/Auth/SignUp.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
 import { GlobleContext } from "./context/GlobleContext.jsx";
 import AdminDashboardPage from "./pages/Admin/AdminDashboardPage.jsx";
@@ -24,31 +24,29 @@ import EmpDashboard from "./pages/Employee/EmpDashboard.jsx";
 import EmpTaskManagement from "./pages/Employee/EmpTaskManagement.jsx";
 import EmpProfileManagement from "./pages/Employee/EmpProfileManagement.jsx";
 import EmpLeaveManagemnet from "./pages/Employee/EmpLeaveManagemnet.jsx";
-
+import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 
 const App = () => {
-  const { user } = useContext(GlobleContext);
 
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
 
-      {/* Protected Admin Routes */}
-      {user?.role === "ADMIN" && (
+      {/* ADMIN */}
+      <Route element={<ProtectedRoute allowed={["ADMIN"]} />}>
         <Route path="/admin" element={<MainLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="department" element={<DapManagement />} />
           <Route path="project" element={<ProManagement />} />
           <Route path="profile" element={<ProfieManagement />} />
           <Route path="employee" element={<EmpManagement />} />
-        
         </Route>
-      )}
+      </Route>
 
-      {user?.role === "HR" && (
+      {/* HR */}
+      <Route element={<ProtectedRoute allowed={["HR"]} />}>
         <Route path="/hr" element={<MainLayout />}>
           <Route path="dashboard" element={<HrDashboard />} />
           <Route path="department" element={<HrDepManagement />} />
@@ -57,25 +55,27 @@ const App = () => {
           <Route path="leave" element={<HrLeaveManagement />} />
           <Route path="employee" element={<HrEmpManagement />} />
         </Route>
-      )}
+      </Route>
 
-      {user?.role === "MANAGER" && (
+      {/* MANAGER */}
+      <Route element={<ProtectedRoute allowed={["MANAGER"]} />}>
         <Route path="/manager" element={<MainLayout />}>
           <Route path="dashboard" element={<MangDashboard />} />
           <Route path="project" element={<MangProManagement />} />
           <Route path="profile" element={<ManProfileManagement />} />
           <Route path="leave" element={<MangLeaveManagement />} />
         </Route>
-      )}
+      </Route>
 
-      {user?.role === "EMPLOYEE" && (
+      {/* EMPLOYEE */}
+      <Route element={<ProtectedRoute allowed={["EMPLOYEE"]} />}>
         <Route path="/employee" element={<MainLayout />}>
           <Route path="dashboard" element={<EmpDashboard />} />
           <Route path="task" element={<EmpTaskManagement />} />
           <Route path="profile" element={<EmpProfileManagement />} />
           <Route path="leave" element={<EmpLeaveManagemnet />} />
         </Route>
-      )}
+      </Route>
     </Routes>
   );
 };
