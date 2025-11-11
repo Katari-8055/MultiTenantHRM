@@ -25,6 +25,9 @@ export const GlobleProvider = ({ children }) => {
     fetchUser();
   }, []);
 
+
+ 
+
   return (
     <GlobleContext.Provider value={{ user, setUser, loading }}>
       {children}
