@@ -1,38 +1,28 @@
 import React from "react";
 import { Eye, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const rawEmployees = [
-  {
-    id: 1,
-    firstName: "Rahul",
-    email: "rahul@example.com",
-    role: "Developer",
-    status: "Active",
-    department: "Engineering",
-    createdAt: "2024-05-12",
-  },
-  {
-    id: 2,
-    firstName: "Priya",
-    email: "priya@example.com",
-    role: "HR Manager",
-    status: "Inactive",
-    department: "Human Resources",
-    createdAt: "2023-11-08",
-  },
-  {
-    id: 3,
-    firstName: "Amit",
-    email: "amit@example.com",
-    role: "Designer",
-    status: "Active",
-    department: "UI/UX",
-    createdAt: "2024-01-18",
-  },
-];
+import { useState } from "react";
+import { useEffect } from "react";
+import axios from "axios";
 
 const EmployeeList = () => {
+  const [employees, setEmployees] = useState([]);
+
+  const getEmployee = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/admin/getEmployee",
+        { withCredentials: true }
+      );
+      setEmployees(res.data.employees);
+    } catch (error) {
+      console.log(error, "Unable to find Employee");
+    }
+  };
+
+  useEffect(() => {
+    getEmployee();
+  }, []);
 
   return (
     <div className="p-6">
@@ -51,53 +41,57 @@ const EmployeeList = () => {
           </thead>
 
           <tbody>
-            {rawEmployees.map((emp) => (
-              <tr
-                key={emp.id}
-                className="hover:bg-gray-50 transition-colors duration-200"
-              >
-                {/* Name */}
-                <td className="py-3 px-4">{emp.firstName}</td>
+            {employees && employees.length > 0 ? (
+              employees.map((emp) => (
+                <tr
+                  key={emp.id}
+                  className="hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <td className="py-3 px-4">{emp.firstName}</td>
+                  <td className="py-3 px-4">{emp.email}</td>
+                  <td className="py-3 px-4">{emp.role}</td>
+                  <td className="py-3 px-4">{emp.department?.name ?? "N/A"}</td>
 
-                {/* Email */}
-                <td className="py-3 px-4">{emp.email}</td>
+                  <td className="py-3 px-4">{emp.createdAt}</td>
 
-                {/* Role */}
-                <td className="py-3 px-4">{emp.role}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        emp.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-orange-100 text-orange-700"
+                      }`}
+                    >
+                      {emp.status}
+                    </span>
+                  </td>
 
-                {/* Department */}
-                <td className="py-3 px-4">{emp.department}</td>
+                  <td className="py-3 px-4 flex gap-2">
+                    <Link to={`/employee/${emp.id}`}>
+                      <button className="p-2 rounded-full hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition cursor-pointer">
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    </Link>
 
-                {/* CreatedAt */}
-                <td className="py-3 px-4">{emp.createdAt}</td>
-
-                {/* Status */}
-                <td className="py-3 px-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      emp.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-orange-100 text-orange-700"
-                    }`}
-                  >
-                    {emp.status}
-                  </span>
-                </td>
-
-                {/* Actions */}
-                <td className="py-3 px-4 flex gap-2">
-                  <Link to={`/employee/${emp.id}`}>
-                    <button className="p-2 rounded-full hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition cursor-pointer">
-                      <Eye className="w-5 h-5" />
+                    <button className="p-2 rounded-full hover:bg-green-50 text-gray-600 hover:text-green-600 transition cursor-pointer">
+                      <Edit className="w-5 h-5" />
                     </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center py-6 text-gray-500">
+                  No employees found.
+                  <Link
+                    to="/addEmployee"
+                    className="text-blue-600 underline ml-1"
+                  >
+                    Add Employee
                   </Link>
-
-                  <button className="p-2 rounded-full hover:bg-green-50 text-gray-600 hover:text-green-600 transition cursor-pointer">
-                    <Edit className="w-5 h-5" />
-                  </button>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
