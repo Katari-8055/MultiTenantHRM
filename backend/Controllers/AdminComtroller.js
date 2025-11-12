@@ -39,4 +39,30 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
         success: true,
         departments
     });
-})
+});
+
+
+
+//--------------------------------------------------------Get Employee------------------------------------//
+
+export const getEmployee = asyncHandler(async (req, res, next) => {
+  const tenantId = req.tenantId;
+
+  const employee = await prisma.tenant.findUnique({
+    where: {
+      id: tenantId,
+    },
+    include: {
+      employees: {
+        include: {
+          department: true, 
+        },
+      },
+    },
+  });
+
+  res.json({
+    success: true,
+    employees: employee?.employees ?? [],
+  });
+});
