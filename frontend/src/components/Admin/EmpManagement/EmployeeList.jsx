@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Eye, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
+import { GlobleContext } from "../../../context/GlobleContext";
 
 const EmployeeList = () => {
-  const [employees, setEmployees] = useState([]);
+  const {employeeList, setEmployeeList} = useContext(GlobleContext);
+
 
   const getEmployee = async () => {
     try {
@@ -14,7 +16,7 @@ const EmployeeList = () => {
         "http://localhost:3000/api/admin/getEmployee",
         { withCredentials: true }
       );
-      setEmployees(res.data.employees);
+      setEmployeeList(res.data.employees);
     } catch (error) {
       console.log(error, "Unable to find Employee");
     }
@@ -41,8 +43,8 @@ const EmployeeList = () => {
           </thead>
 
           <tbody>
-            {employees && employees.length > 0 ? (
-              employees.map((emp) => (
+            {employeeList && employeeList.length > 0 ? (
+              employeeList.map((emp) => (
                 <tr
                   key={emp.id}
                   className="hover:bg-gray-50 transition-colors duration-200"
