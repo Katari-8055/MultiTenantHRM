@@ -6,6 +6,7 @@ export const GlobleContext = createContext();
 export const GlobleProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [employeeList, setEmployeeList] = useState([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,7 +30,7 @@ export const GlobleProvider = ({ children }) => {
  
 
   return (
-    <GlobleContext.Provider value={{ user, setUser, loading }}>
+    <GlobleContext.Provider value={{ user, setUser, loading, employeeList, setEmployeeList }}>
       {children}
     </GlobleContext.Provider>
   );
