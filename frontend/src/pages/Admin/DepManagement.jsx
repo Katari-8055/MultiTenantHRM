@@ -1,8 +1,13 @@
 import React from 'react'
+import DepartmentList from '../../components/Admin/DepartManagement/DepartmentList'
+import DepartmentHeader from '../../components/Admin/DepartManagement/DepartmentHeader'
 
 const DapManagement = () => {
   return (
-    <div>DapManagement</div>
+    <div>
+      <DepartmentHeader/>
+      <DepartmentList/>
+    </div>
   )
 }
 
