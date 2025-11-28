@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -7,9 +7,11 @@ import {
   CalendarDays,
   Users,
 } from "lucide-react";
+import { GlobleContext } from "../../../context/GlobleContext";
+import axios from "axios";
 
 const DepartmentList = () => {
-  const [departments] = useState([
+  const [department] = useState([
     {
       id: "1",
       name: "Engineering",
@@ -59,6 +61,22 @@ const DepartmentList = () => {
         return "bg-gray-100 text-gray-700 border-gray-300";
     }
   };
+
+  const { departments, setDepartments } = useContext(GlobleContext);
+
+  const getDepartment = async() =>{
+        try {
+          const res = await axios.get("http://localhost:3000/api/admin/getDepartment", {withCredentials: true});
+          setDepartments(res.data.departments);
+          console.log("Departments fetched:", res.data.departments);
+        } catch (error) {
+          console.log(error, "Unable to find Deparment");
+        }
+      }
+  useEffect(() => {
+      getDepartment();
+  },[]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 p-8 space-y-8">
