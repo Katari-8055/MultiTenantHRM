@@ -33,6 +33,16 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
     const departments = await prisma.department.findMany({
         where: {
             tenantId
+        },
+        include: {
+            employees: {
+                select: {
+                    id: true,
+                    firstName : true,
+                    email : true,
+                    role : true
+                }
+            }
         }
     });
     res.status(200).json({
