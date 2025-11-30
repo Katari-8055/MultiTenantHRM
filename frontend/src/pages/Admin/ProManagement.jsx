@@ -1,8 +1,11 @@
 import React from 'react'
+import ProjectManagement from '../../components/Admin/ProManagement/ProjectManagement'
 
 const ProManagement = () => {
   return (
-    <div>ProManagement</div>
+    <div>
+      <ProjectManagement />
+    </div>
   )
 }
 
