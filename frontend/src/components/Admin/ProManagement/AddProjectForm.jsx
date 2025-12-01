@@ -1,32 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { GlobleContext } from "../../../context/GlobleContext";
 
 export default function AddProjectForm({ onClose }) {
   const [newProject, setNewProject] = useState({
     name: "",
     client: "",
     managerId: "",
-    Deadline: "",
-    employees: [],
+    deadline: "",
+    memberIds: [],
   });
 
-  // Demo static employees & managers (UI only)
-  const demoEmployees = [
-    { id: "1", firstName: "Rahul" },
-    { id: "2", firstName: "Priya" },
-    { id: "3", firstName: "Amit" },
-  ];
+  const { employeeList, setEmployeeList } = useContext(GlobleContext);
 
-  const demoManagers = [
-    { id: "101", firstName: "Manager 1" },
-    { id: "102", firstName: "Manager 2" },
-  ];
+  useEffect(() => {
+    getEmployee();
+  }, []);
+
+  const getEmployee = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/admin/getEmployee",
+        { withCredentials: true }
+      );
+      setEmployeeList(res.data.employees);
+    } catch (error) {
+      console.log(error, "Unable to find Employee");
+    }
+  };
 
   const [employeeInput, setEmployeeInput] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("UI Only Project Data:", newProject);
-    onClose(); // Just close form
+
+    const payload = {
+      name: newProject.name,
+      client: newProject.client,
+      managerId: newProject.managerId,
+      deadline: newProject.deadline,
+      memberIds: newProject.memberIds,
+    };
+
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/api/admin/addProject",
+        payload,
+        { withCredentials: true }
+      );
+
+      console.log("Project Created:", res.data);
+      onClose();
+    } catch (error) {
+      console.log("Error creating project:", error);
+    }
   };
 
   return (
@@ -62,9 +89,9 @@ export default function AddProjectForm({ onClose }) {
           {/* Deadline */}
           <input
             type="date"
-            value={newProject.Deadline}
+            value={newProject.deadline}
             onChange={(e) =>
-              setNewProject({ ...newProject, Deadline: e.target.value })
+              setNewProject({ ...newProject, deadline: e.target.value })
             }
             className="border rounded-lg p-2"
           />
@@ -79,14 +106,14 @@ export default function AddProjectForm({ onClose }) {
             required
           >
             <option value="">Select Manager</option>
-            {demoManagers.map((m) => (
+            {employeeList.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.firstName}
               </option>
             ))}
           </select>
 
-          {/* Employees add UI */}
+          {/* Employees */}
           <div className="flex gap-2 mt-2">
             <select
               value={employeeInput}
@@ -94,7 +121,7 @@ export default function AddProjectForm({ onClose }) {
               className="border rounded-lg p-2 flex-1 cursor-pointer"
             >
               <option value="">Select Employee</option>
-              {demoEmployees.map((emp) => (
+              {employeeList.map((emp) => (
                 <option key={emp.id} value={emp.id}>
                   {emp.firstName}
                 </option>
@@ -108,7 +135,7 @@ export default function AddProjectForm({ onClose }) {
 
                 setNewProject((prev) => ({
                   ...prev,
-                  employees: [...prev.employees, employeeInput],
+                  memberIds: [...prev.memberIds, employeeInput],
                 }));
 
                 setEmployeeInput("");
@@ -119,10 +146,10 @@ export default function AddProjectForm({ onClose }) {
             </button>
           </div>
 
-          {/* Display added employees */}
+          {/* Display selected employees */}
           <ul className="list-disc list-inside text-gray-700 mt-2">
-            {newProject.employees.map((empId, i) => {
-              const emp = demoEmployees.find((e) => e.id === empId);
+            {newProject.memberIds.map((empId, i) => {
+              const emp = employeeList.find((e) => e.id === empId);
               return (
                 <li key={i}>
                   {emp ? emp.firstName : empId}
@@ -131,7 +158,7 @@ export default function AddProjectForm({ onClose }) {
                     onClick={() =>
                       setNewProject((prev) => ({
                         ...prev,
-                        employees: prev.employees.filter((_, idx) => idx !== i),
+                        memberIds: prev.memberIds.filter((_, idx) => idx !== i),
                       }))
                     }
                     className="text-sm text-red-600 ml-2"
