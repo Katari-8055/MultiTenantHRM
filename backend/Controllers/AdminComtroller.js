@@ -76,3 +76,61 @@ export const getEmployee = asyncHandler(async (req, res, next) => {
     employees: employee?.employees ?? [],
   });
 });
+
+//--------------------------------------------------------Delete Department------------------------------------//
+
+
+//-------------------------------------Add Projects-----------------------------------//
+
+
+export const addProject = asyncHandler(async (req, res, next) => {
+  const { name, client, status, managerId, deadline, memberIds } = req.body;
+
+  const tenantId = req.tenantId;
+  if (!tenantId) {
+    return next(new Error("Tenant ID missing in request", 400));
+  }
+
+  const project = await prisma.project.create({
+    data: {
+      name,
+      client,
+      status,
+      deadline: deadline ? new Date(deadline) : null,
+      tenant: { connect: { id: tenantId } },
+      manager: { connect: { id: managerId } },
+      members: {
+        connect: memberIds?.map((id) => ({ id })) || [],
+      },
+    },
+  });
+
+  return res.status(201).json({
+    message: "Project created successfully",
+    project,
+  });
+});
+
+
+//-------------------------------------Get Projects-----------------------------------//
+
+export const getProject = asyncHandler(async (req, res, next) => {
+  const tenantId = req.tenantId;
+
+  const projects = await prisma.project.findMany({
+    where: { tenantId },
+    include: {
+      manager: {
+        select: { firstName: true, lastName: true, email: true }
+      },
+      members: {
+        select: { firstName: true, lastName: true, email: true }
+      },
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    projects
+  });
+});
