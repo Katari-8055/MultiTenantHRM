@@ -134,3 +134,18 @@ export const getProject = asyncHandler(async (req, res, next) => {
     projects
   });
 });
+
+
+//-------------------------------------Delete Projects-----------------------------------//
+
+export const deleteProject = asyncHandler(async (req, res, next) => {
+  const { projectId } = req.params;
+  await prisma.project.delete({
+    where: { id: projectId }
+  })
+  res.status(200).json({
+    success: true,
+    message: "Project deleted successfully"
+  })
+  
+})
