@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { GlobleContext } from "../../../context/GlobleContext";
 
-export default function AddProjectForm({ onClose }) {
+export default function AddProjectForm({ onClose, onCreateProject }) {
   const [newProject, setNewProject] = useState({
     name: "",
     client: "",
@@ -12,6 +12,7 @@ export default function AddProjectForm({ onClose }) {
   });
 
   const { employeeList, setEmployeeList } = useContext(GlobleContext);
+  const [employeeInput, setEmployeeInput] = useState("");
 
   useEffect(() => {
     getEmployee();
@@ -25,11 +26,9 @@ export default function AddProjectForm({ onClose }) {
       );
       setEmployeeList(res.data.employees);
     } catch (error) {
-      console.log(error, "Unable to find Employee");
+      console.log("Unable to find Employee");
     }
   };
-
-  const [employeeInput, setEmployeeInput] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,7 +48,11 @@ export default function AddProjectForm({ onClose }) {
         { withCredentials: true }
       );
 
-      console.log("Project Created:", res.data);
+      // ⭐ Update UI Immediately
+      if (res.data.project) {
+        onCreateProject(res.data.project);
+      }
+
       onClose();
     } catch (error) {
       console.log("Error creating project:", error);
@@ -62,7 +65,6 @@ export default function AddProjectForm({ onClose }) {
         <h2 className="text-xl font-semibold mb-4">Create New Project</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          {/* Project Name */}
           <input
             type="text"
             placeholder="Project Name"
@@ -74,7 +76,6 @@ export default function AddProjectForm({ onClose }) {
             required
           />
 
-          {/* Client */}
           <input
             type="text"
             placeholder="Client Name"
@@ -86,7 +87,6 @@ export default function AddProjectForm({ onClose }) {
             required
           />
 
-          {/* Deadline */}
           <input
             type="date"
             value={newProject.deadline}
@@ -96,7 +96,6 @@ export default function AddProjectForm({ onClose }) {
             className="border rounded-lg p-2"
           />
 
-          {/* Manager */}
           <select
             value={newProject.managerId}
             onChange={(e) =>
@@ -113,7 +112,6 @@ export default function AddProjectForm({ onClose }) {
             ))}
           </select>
 
-          {/* Employees */}
           <div className="flex gap-2 mt-2">
             <select
               value={employeeInput}
@@ -146,7 +144,6 @@ export default function AddProjectForm({ onClose }) {
             </button>
           </div>
 
-          {/* Display selected employees */}
           <ul className="list-disc list-inside text-gray-700 mt-2">
             {newProject.memberIds.map((empId, i) => {
               const emp = employeeList.find((e) => e.id === empId);
@@ -170,7 +167,6 @@ export default function AddProjectForm({ onClose }) {
             })}
           </ul>
 
-          {/* Buttons */}
           <div className="flex justify-end gap-3 mt-1">
             <button
               type="button"
