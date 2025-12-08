@@ -235,3 +235,49 @@ export const getMe = asyncHandler(async (req, res) => {
     role: userRole,
   });
 });
+
+
+
+
+//------------------------------------------Employee Registration in bulk------------------------------------------------//
+
+
+
+export const registerEmployeesBulk = asyncHandler(async (req, res, next) => {
+  const { employees } = req.body; // Expecting an array of employees
+
+  if (!employees || !Array.isArray(employees)) {
+    return res.status(400).json({
+      success: false,
+      message: "Employees array is required",
+    });
+  }
+
+  const tenantId = "cmhs3q50n0000vo3chs5up759";
+  const plainPassword = "123456";
+  const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+  // Prepare employees
+  const newEmployeeData = employees.map(emp => ({
+    email: emp.email,
+    firstName: emp.firstName,
+    role: emp.role,
+    salary: emp.salary,
+    departmentId: emp.departmentId,
+    tenantId: tenantId,
+    password: hashedPassword,
+     dateOfJoining: new Date(emp.dateOfJoining),
+  }));
+
+  // Insert employees
+  const result = await prisma.employee.createMany({
+    data: newEmployeeData,
+    skipDuplicates: true, // avoid error on duplicate email
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: "Employees added successfully",
+    insertedCount: result.count,
+  });
+});
