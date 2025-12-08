@@ -1,8 +1,11 @@
 import React from 'react'
+import HRProjectMang from '../../components/HR/HRProjectMAng'
 
 const HrProManagement = () => {
   return (
-    <div>HrProManagement</div>
+    <div>
+      <HRProjectMang />
+    </div>
   )
 }
 
