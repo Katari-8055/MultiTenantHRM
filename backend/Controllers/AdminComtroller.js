@@ -91,19 +91,24 @@ export const addProject = asyncHandler(async (req, res, next) => {
     return next(new Error("Tenant ID missing in request", 400));
   }
 
-  const project = await prisma.project.create({
-    data: {
-      name,
-      client,
-      status,
-      deadline: deadline ? new Date(deadline) : null,
-      tenant: { connect: { id: tenantId } },
-      manager: { connect: { id: managerId } },
-      members: {
-        connect: memberIds?.map((id) => ({ id })) || [],
-      },
+ const project = await prisma.project.create({
+  data: {
+    name,
+    client,
+    status,
+    deadline: deadline ? new Date(deadline) : null,
+    tenant: { connect: { id: tenantId } },
+    manager: { connect: { id: managerId } },
+    members: {
+      connect: memberIds?.map((id) => ({ id })) || [],
     },
-  });
+  },
+  include: {
+    manager: { select: { id: true, firstName: true, lastName: true, email: true } },
+    members: { select: { id: true, firstName: true, lastName: true, email: true } },
+  },
+});
+
 
   return res.status(201).json({
     message: "Project created successfully",
