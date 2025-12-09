@@ -25,6 +25,7 @@ import EmpTaskManagement from "./pages/Employee/EmpTaskManagement.jsx";
 import EmpProfileManagement from "./pages/Employee/EmpProfileManagement.jsx";
 import EmpLeaveManagemnet from "./pages/Employee/EmpLeaveManagemnet.jsx";
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
+import EmpProject from "./pages/Employee/EmpProject.jsx";
 
 const App = () => {
 
@@ -73,6 +74,7 @@ const App = () => {
           <Route path="dashboard" element={<EmpDashboard />} />
           <Route path="task" element={<EmpTaskManagement />} />
           <Route path="profile" element={<EmpProfileManagement />} />
+          <Route path="project" element={<EmpProject />} />
           <Route path="leave" element={<EmpLeaveManagemnet />} />
         </Route>
       </Route>
