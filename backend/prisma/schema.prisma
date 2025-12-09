@@ -1,16 +1,16 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+// ========================
+//  GENERATOR & DATASOURCE
+// ========================
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 
 // ========================
@@ -35,8 +35,9 @@ model Tenant {
 }
 
 
+
 // ========================
-//  EMPLOYEE (also USER)
+//  EMPLOYEE (USER)
 // ========================
 model Employee {
   id                String   @id @default(cuid())
@@ -46,15 +47,15 @@ model Employee {
   password          String?
   role              Role     @default(EMPLOYEE)
 
-  // Profile Info
+  // Profile
   firstName         String
   lastName          String?
   phone             String?
   dateOfBirth       DateTime?
-  gender            Gender? @default(OTHER)
+  gender            Gender?  @default(OTHER)
   position          String?
 
-  // Initial Password Setup
+  // Initial Setup
   setupToken        String?
   setupTokenExpiry  DateTime?
 
@@ -69,31 +70,35 @@ model Employee {
 
   // Relations
   departmentId      String?
-  projectId         String?
   tenantId          String
 
   tenant            Tenant     @relation(fields: [tenantId], references: [id])
   department        Department? @relation(fields: [departmentId], references: [id])
-  project           Project?    @relation(fields: [projectId], references: [id])  
 
+  // Employee working on multiple projects
+  projects           Project[]
+
+  // Employee can manage MULTIPLE projects (UPDATED)
+  projectsManaged    Project[] @relation("ProjectManagerEmployee")
 
   // Leaves
-  leaves            Leave[]
+  leaves             Leave[]
 
   // Tasks
-  tasksAssigned     Task[] @relation("TaskAssignee")
-  tasksCreated      Task[] @relation("TaskCreator")
+  tasksAssigned      Task[] @relation("TaskAssignee")
+  tasksCreated       Task[] @relation("TaskCreator")
 
-  // Manager can handle one project only
-  projectManaged    Project?   @relation("ProjectManagerEmployee")
+  leavesManaged      Leave[]    @relation("LeaveManager")
+  leavesApproved     Leave[]    @relation("LeaveHR")
 
-  leavesManaged     Leave[]    @relation("LeaveManager")
-  leavesApproved    Leave[]    @relation("LeaveHR")
+  // Notifications
+  notifications      Notification[]
 }
 
 
+
 // ========================
-//  PROJECT
+//  PROJECT  (Many-to-Many + Multi Manager Support)
 // ========================
 model Project {
   id          String   @id @default(cuid())
@@ -103,17 +108,22 @@ model Project {
   description String?
   status      Status @default(ONGOING)
   deadline    DateTime?
-  managerId   String @unique    // ✅ Manager → only one project
+
+  // Manager CAN now manage multiple projects → REMOVED @unique
+  managerId   String
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   tenant      Tenant  @relation(fields: [tenantId], references: [id])
 
+  // Multiple employees working in this project
   members     Employee[]
 
-  // Manager (only one project allowed)
+  // Manager relation → MULTIPLE PROJECT SUPPORT
   manager     Employee @relation("ProjectManagerEmployee", fields: [managerId], references: [id])
 }
+
 
 
 // ========================
@@ -140,8 +150,8 @@ model Leave {
   tenantId      String
   employeeId    String
 
-  managerId     String?   // first approver
-  hrId          String?   // final approver
+  managerId     String? 
+  hrId          String? 
 
   type          LeaveType
   reason        String?
@@ -154,15 +164,14 @@ model Leave {
 
   managerStatus LeaveStatus  @default(PENDING)
   hrStatus      LeaveStatus  @default(PENDING)
-
-  status        LeaveStatus  @default(PENDING)  // final
+  status        LeaveStatus  @default(PENDING)
   attachment    String?
 
-  tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  employee   Employee  @relation(fields: [employeeId], references: [id])
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  employee      Employee  @relation(fields: [employeeId], references: [id])
 
-  manager    Employee?   @relation("LeaveManager", fields: [managerId], references: [id])
-  hr         Employee?   @relation("LeaveHR", fields: [hrId], references: [id])
+  manager       Employee?   @relation("LeaveManager", fields: [managerId], references: [id])
+  hr            Employee?   @relation("LeaveHR", fields: [hrId], references: [id])
 }
 
 
@@ -184,9 +193,26 @@ model Task {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  assignee   Employee  @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  creator    Employee  @relation("TaskCreator", fields: [creatorId], references: [id])
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  assignee      Employee  @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator       Employee  @relation("TaskCreator", fields: [creatorId], references: [id])
+}
+
+
+
+// ========================
+//  NOTIFICATION
+// ========================
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  message   String
+  type      NotificationType @default(GENERAL)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      Employee @relation(fields: [userId], references: [id])
 }
 
 
@@ -255,3 +281,13 @@ enum TaskStatus {
   IN_PROGRESS
   COMPLETED
 }
+
+enum NotificationType {
+  GENERAL
+  PROJECT
+  TASK
+  LEAVE
+  SALARY
+  SYSTEM
+}
+
