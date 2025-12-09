@@ -18,6 +18,7 @@ const menuItems = [
   { title: "Dashboard", to: "/employee/dashboard", icon: <LayoutDashboard size={20} /> },
   { title: "Leave Management", to: "/employee/leave", icon: <Users size={20} /> },
   { title: "Task Management", to: "/employee/task", icon: <CheckSquare size={20} /> },
+  { title: "Project Management", to: "/employee/project", icon: <CheckSquare size={20} /> },
   { title: "Profile Setting", to: "/employee/profile", icon: <Settings size={20} /> },
 ];
 
