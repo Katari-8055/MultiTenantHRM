@@ -1,8 +1,11 @@
 import React from 'react'
+import LeaveManagement from '../../components/Employee/Leave/LeaveManagement'
 
 const EmpLeaveManagemnet = () => {
   return (
-    <div>EmpLeaveManagemnet</div>
+    <div>
+      <LeaveManagement/>
+    </div>
   )
 }
 
