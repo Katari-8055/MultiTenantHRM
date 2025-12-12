@@ -27,3 +27,25 @@ export const getHRLeaves = asyncHandler(async (req, res) => {
         leave
     });
 });
+
+//-----------------------------------------------------Update Leave Status-----------------------------------------------------//
+
+
+export const updateLeaveStatus = asyncHandler(async (req, res) => {
+  const { leaveId, status } = req.body;
+  const { tenentId, employeeId } = req;
+
+  if (!leaveId || !status) {
+    return res.status(400).json({ message: "leaveId and status required" });
+  }
+
+  const leave = await prisma.leave.update({
+    where: { id: leaveId, tenentId: tenentId },
+    data: {
+      status,
+      hrId: employeeId,
+    },
+  });
+
+  res.json({ message: "Leave updated", leave });
+});
