@@ -122,7 +122,7 @@ export default function LeaveManagement() {
 
             <div className="flex items-center gap-2 mt-4 text-gray-700">
               <User2 size={18} />
-              <p className="text-sm font-medium">Rahul</p>
+              <p className="text-sm font-medium">{leave.hr?.firstName ?? "HRM"}</p>
             </div>
           </div>
         ))}
