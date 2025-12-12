@@ -2,6 +2,7 @@ import express from 'express';
 import { AuthenticateMiddleware } from '../middlewares/AuthMiddleware.js';
 import { addDepartment, addProject, deleteProject, getDepartment, getEmployee, getProject } from '../Controllers/AdminComtroller.js';
 import { applyLeave, getEmpProjects, getLeaves } from '../Controllers/EmpController.js';
+import { getHRLeaves } from '../Controllers/HRControllers.js';
 
 
 const router = express.Router();
@@ -16,6 +17,8 @@ router.delete('/deleteProject/:projectId',AuthenticateMiddleware,deleteProject);
 router.get('/getEmpProject',AuthenticateMiddleware,getEmpProjects);
 router.post('/applyLeave',AuthenticateMiddleware, applyLeave);
 router.get('/getLeaves',AuthenticateMiddleware, getLeaves);
+
+router.get('/getHRLeave',AuthenticateMiddleware, getHRLeaves);
 
 
 
