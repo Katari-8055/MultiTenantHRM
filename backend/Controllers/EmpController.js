@@ -87,6 +87,11 @@ export const getLeaves = asyncHandler(async (req, res, next) => {
                     reason: true,
                     appliedAt: true,
                     status: true,
+                        hr: {
+                            select: {
+                                firstName: true,
+                            }
+                        }   
                 }
             }
         }
