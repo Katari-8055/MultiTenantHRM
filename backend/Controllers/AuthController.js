@@ -226,9 +226,23 @@ export const getMe = asyncHandler(async (req, res) => {
       select: {
         id: true,
         firstName: true,
+        lastName: true,
         email: true,
         role: true,
         tenantId: true,
+        phone: true,
+        dateOfBirth: true,
+        gender: true,
+        position: true,
+        salary: true,
+        dateOfJoining: true,
+        employmentType: true,
+        status: true,
+        department: {
+          select: {
+            name: true
+          }
+        }
       }
     });
   }
@@ -312,7 +326,7 @@ export const logout = asyncHandler(async (req, res, next) => {
 
 export const updateMe = asyncHandler(async (req, res) => {
   const { tenantId, employeeId } = req;
-  const { name, firstName, lastName, email } = req.body;
+  const { name, firstName, lastName, email, phone, gender, dateOfBirth, position } = req.body;
 
   let updatedUser = null;
 
@@ -325,8 +339,36 @@ export const updateMe = asyncHandler(async (req, res) => {
   } else if (employeeId) {
     updatedUser = await prisma.employee.update({
       where: { id: employeeId },
-      data: { firstName, lastName, email },
-      select: { id: true, firstName: true, email: true, role: true, tenantId: true }
+      data: { 
+        firstName, 
+        lastName, 
+        email, 
+        phone, 
+        gender, 
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined, 
+        position 
+      },
+      select: { 
+        id: true, 
+        firstName: true, 
+        lastName: true, 
+        email: true, 
+        role: true, 
+        tenantId: true,
+        phone: true,
+        dateOfBirth: true,
+        gender: true,
+        position: true,
+        salary: true,
+        dateOfJoining: true,
+        employmentType: true,
+        status: true,
+        department: {
+          select: {
+            name: true
+          }
+        }
+      }
     });
   }
 
