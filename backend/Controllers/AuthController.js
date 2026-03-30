@@ -303,3 +303,71 @@ export const logout = asyncHandler(async (req, res, next) => {
   });
   res.json({ success: true, message: "Logged out successfully" });
 });
+
+
+
+
+
+//-----------------------------------------Update ME-----------------------------------//
+
+export const updateMe = asyncHandler(async (req, res) => {
+  const { tenantId, employeeId } = req;
+  const { name, firstName, lastName, email } = req.body;
+
+  let updatedUser = null;
+
+  if (tenantId && !employeeId) {
+    updatedUser = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { name, email },
+      select: { id: true, name: true, email: true, role: true, domain: true }
+    });
+  } else if (employeeId) {
+    updatedUser = await prisma.employee.update({
+      where: { id: employeeId },
+      data: { firstName, lastName, email },
+      select: { id: true, firstName: true, email: true, role: true, tenantId: true }
+    });
+  }
+
+  res.json({ success: true, message: "Profile updated successfully", user: updatedUser });
+});
+
+
+
+
+
+//-----------------------------------------Change Password-----------------------------------//
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { tenantId, employeeId } = req;
+  const { currentPassword, newPassword } = req.body;
+
+  let user = null;
+
+  if (tenantId && !employeeId) {
+    user = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  } else if (employeeId) {
+    user = await prisma.employee.findUnique({ where: { id: employeeId } });
+  }
+
+  if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
+    return res.status(401).json({ message: "Invalid current password" });
+  }
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+  if (tenantId && !employeeId) {
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { password: hashedNewPassword }
+    });
+  } else if (employeeId) {
+    await prisma.employee.update({
+      where: { id: employeeId },
+      data: { password: hashedNewPassword }
+    });
+  }
+
+  res.json({ success: true, message: "Password updated successfully" });
+});
