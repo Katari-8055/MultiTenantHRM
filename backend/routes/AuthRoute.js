@@ -1,5 +1,5 @@
 import express from 'express';
-import { addEmployee, employeeLogin, getMe, login, logout, register, registerEmployeesBulk, setEmployeePassword } from '../Controllers/AuthController.js';
+import { addEmployee, changePassword, employeeLogin, getMe, login, logout, register, registerEmployeesBulk, setEmployeePassword, updateMe } from '../Controllers/AuthController.js';
 import { AuthenticateMiddleware, authorize } from '../middlewares/AuthMiddleware.js';
 
 const router = express.Router();
@@ -11,6 +11,8 @@ router.post('/addEmployee', AuthenticateMiddleware, authorize('ADMIN', 'HR'), ad
 router.post('/setPassword', setEmployeePassword);
 router.post('/employeeLogin', employeeLogin);
 router.get('/me', AuthenticateMiddleware, getMe);
+router.put('/updateMe', AuthenticateMiddleware, updateMe);
+router.put('/changePassword', AuthenticateMiddleware, changePassword);
 router.post('/logout', logout);
 router.post('/addInBulk', AuthenticateMiddleware, authorize('ADMIN'), registerEmployeesBulk)
 
