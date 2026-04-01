@@ -4,19 +4,32 @@ import prisma from "../utils/client.js";
 //-----------------------------------------------------get Leave Requeste-----------------------------------------------------//
 
 export const getHRLeaves = asyncHandler(async (req, res) => {
-    const { tenentId } = req;
+    const { tenantId } = req;
 
+    // HR sees leaves where: (manager approved) OR (no manager assigned = direct to HR)
     const leave = await prisma.leave.findMany({
         where: {
-            tenentId: tenentId
+            tenantId,
+            OR: [
+                { managerStatus: 'APPROVED' },
+                { managerId: null }
+            ]
         },
+        orderBy: { appliedAt: 'desc' },
         include: {
             employee: {
                 select: {
                     firstName: true,
                     lastName: true,
                     email: true,
-                    role: true
+                    role: true,
+                    department: { select: { name: true } }
+                }
+            },
+            manager: {
+                select: {
+                    firstName: true,
+                    lastName: true
                 }
             }
         }
@@ -32,12 +45,20 @@ export const getHRLeaves = asyncHandler(async (req, res) => {
 
 
 export const updateLeaveStatus = asyncHandler(async (req, res) => {
-  const { leaveId, status } = req.body;
+  const { leaveId, hrStatus } = req.body;
   const { tenantId, employeeId } = req;
 
-  if (!leaveId || !status) {
-    return res.status(400).json({ message: "leaveId and status required" });
+  if (!leaveId || !hrStatus) {
+    return res.status(400).json({ message: "leaveId and hrStatus required" });
   }
+
+  const validStatuses = ['APPROVED', 'REJECTED'];
+  if (!validStatuses.includes(hrStatus)) {
+    return res.status(400).json({ message: "hrStatus must be APPROVED or REJECTED" });
+  }
+
+  // HR decision is FINAL — it sets global status
+  const globalStatus = hrStatus === 'APPROVED' ? 'APPROVED' : 'REJECTED';
 
   const leave = await prisma.leave.update({
     where: {
@@ -45,8 +66,9 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
       tenantId,
     },
     data: {
-      status,
+      hrStatus,
       hrId: employeeId,
+      status: globalStatus,
       decisionAt: new Date(),
     },
     include: {
@@ -58,8 +80,8 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
   const notification = await prisma.notification.create({
     data: {
       userId: leave.employeeId,
-      title: "Leave Status Updated",
-      message: `Your leave has been ${status}`,
+      title: "Leave Decision Finalized",
+      message: `Your leave has been ${globalStatus === 'APPROVED' ? 'fully APPROVED by HR.' : 'REJECTED by HR.'}`,
       type: "LEAVE",
     },
   });
@@ -70,7 +92,7 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
     notification,
   });
 
-  res.json({ message: "Leave updated", leave });
+  res.json({ success: true, message: `Leave ${globalStatus} by HR`, leave });
 });
 
 

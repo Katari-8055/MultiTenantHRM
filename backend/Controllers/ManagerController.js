@@ -170,3 +170,90 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
         recentActivity: recentLeavesFormatted
     });
 });
+
+//-----------------------------------------------------Get Manager Leaves-----------------------------------------------------//
+
+export const getManagerLeaves = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+
+    if (!tenantId || !employeeId) {
+        return res.status(400).json({ message: "tenantId and employeeId are required" });
+    }
+
+    const leaves = await prisma.leave.findMany({
+        where: {
+            tenantId,
+            managerId: employeeId
+        },
+        orderBy: { appliedAt: 'desc' },
+        include: {
+            employee: {
+                select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    role: true,
+                    department: { select: { name: true } }
+                }
+            }
+        }
+    });
+
+    res.status(200).json({ success: true, leaves });
+});
+
+//-----------------------------------------------------Update Manager Leave Status-----------------------------------------------------//
+
+export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+    const { leaveId, managerStatus } = req.body;
+
+    if (!leaveId || !managerStatus) {
+        return res.status(400).json({ message: "leaveId and managerStatus are required" });
+    }
+
+    const validStatuses = ['APPROVED', 'REJECTED'];
+    if (!validStatuses.includes(managerStatus)) {
+        return res.status(400).json({ message: "managerStatus must be APPROVED or REJECTED" });
+    }
+
+    // Verify this leave belongs to this manager
+    const existingLeave = await prisma.leave.findFirst({
+        where: { id: leaveId, tenantId, managerId: employeeId }
+    });
+
+    if (!existingLeave) {
+        return res.status(403).json({ message: "Leave not found or unauthorized" });
+    }
+
+    // If Manager REJECTS → global status becomes REJECTED immediately
+    // If Manager APPROVES → pass it to HR (global status remains PENDING)
+    const globalStatus = managerStatus === 'REJECTED' ? 'REJECTED' : 'PENDING';
+
+    const updatedLeave = await prisma.leave.update({
+        where: { id: leaveId },
+        data: {
+            managerStatus,
+            status: globalStatus
+        },
+        include: {
+            employee: {
+                select: { firstName: true, lastName: true, email: true }
+            }
+        }
+    });
+
+    // Emit real-time notification to the employee
+    const notification = await prisma.notification.create({
+        data: {
+            userId: updatedLeave.employeeId,
+            title: "Leave Status Updated",
+            message: `Your leave request has been ${managerStatus === 'APPROVED' ? 'approved by your Manager. Awaiting HR final approval.' : 'rejected by your Manager.'}`,
+            type: "LEAVE"
+        }
+    });
+
+    req.io.to(updatedLeave.employeeId).emit("leave-updated", { leave: updatedLeave, notification });
+
+    res.status(200).json({ success: true, message: `Leave ${managerStatus} by Manager`, leave: updatedLeave });
+});

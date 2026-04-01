@@ -52,17 +52,31 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
+
+    // Find the employee's manager via their first project assignment
+    // Employee model has NO managerId – manager relationship flows through Projects
+    const project = await prisma.project.findFirst({
+        where: {
+            tenantId,
+            members: { some: { id: employeeId } }
+        },
+        select: { managerId: true }
+    });
+
+    const resolvedManagerId = project?.managerId || null;
+
     const newLeave = await prisma.leave.create({
         data: {
             tenantId,
             employeeId,
+            managerId: resolvedManagerId,
             type,
             startDate: new Date(startDate),
             endDate: new Date(endDate),
             reason,
             appliedAt: new Date()
         }
-    })
+    });
     res.status(201).json({ message: "Leave applied successfully", leave: newLeave });
 });
 
@@ -86,12 +100,21 @@ export const getLeaves = asyncHandler(async (req, res, next) => {
                     endDate: true,
                     reason: true,
                     appliedAt: true,
+                    managerStatus: true,
+                    hrStatus: true,
                     status: true,
                         hr: {
                             select: {
                                 firstName: true,
+                                lastName: true
                             }
-                        }   
+                        },
+                        manager: {
+                            select: {
+                                firstName: true,
+                                lastName: true
+                            }
+                        }
                 }
             }
         }
