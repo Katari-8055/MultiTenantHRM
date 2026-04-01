@@ -73,3 +73,89 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
   res.json({ message: "Leave updated", leave });
 });
 
+
+//-----------------------------------------------------HR Dashboard Stats-----------------------------------------------------//
+
+export const getHrDashboardStats = asyncHandler(async (req, res, next) => {
+  const tenantId = req.tenantId;
+
+  // Counts
+  const employeeCount = await prisma.employee.count({ where: { tenantId } });
+  const departmentCount = await prisma.department.count({ where: { tenantId } });
+  const pendingLeaveCount = await prisma.leave.count({
+    where: {
+      tenantId,
+      status: 'PENDING'
+    }
+  });
+  const approvedLeaveCount = await prisma.leave.count({
+    where: {
+      tenantId,
+      status: 'APPROVED'
+    }
+  });
+
+  // Chart Data (Leaves grouped by status)
+  const leavesStatusCounts = await prisma.leave.groupBy({
+    by: ['status'],
+    where: { tenantId },
+    _count: {
+      status: true
+    }
+  });
+
+  let chartData = [];
+  if (leavesStatusCounts.length > 0) {
+    chartData = leavesStatusCounts.map(item => ({
+      name: item.status,
+      value: item._count.status
+    }));
+  } else {
+    chartData = [
+      { name: "PENDING", value: 0 },
+      { name: "APPROVED", value: 0 },
+      { name: "REJECTED", value: 0 },
+    ];
+  }
+
+  // Recent Leave Requests
+  const recentLeaves = await prisma.leave.findMany({
+    where: { tenantId },
+    take: 5,
+    orderBy: { appliedAt: 'desc' },
+    include: {
+      employee: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true
+        }
+      }
+    }
+  });
+
+  const recentActivity = recentLeaves.map(leave => ({
+    id: leave.id,
+    firstName: leave.employee.firstName,
+    lastName: leave.employee.lastName,
+    email: leave.employee.email,
+    role: leave.employee.role,
+    createdAt: leave.appliedAt, // use appliedAt as createdAt for standard interface
+    type: leave.type,
+    status: leave.status,
+  }));
+
+  res.status(200).json({
+    success: true,
+    stats: {
+      totalEmployees: employeeCount,
+      totalDepartments: departmentCount,
+      pendingLeaves: pendingLeaveCount,
+      approvedLeaves: approvedLeaveCount
+    },
+    chartData,
+    recentActivity
+  });
+});
+
