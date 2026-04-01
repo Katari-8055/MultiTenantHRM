@@ -64,9 +64,9 @@ const App = () => {
       <Route element={<ProtectedRoute allowed={["MANAGER"]} />}>
         <Route path="/manager" element={<MainLayout />}>
           <Route path="dashboard" element={<MangDashboard />} />
-          <Route path="project" element={<MangProManagement />} />
-          <Route path="profile" element={<ManProfileManagement />} />
-          <Route path="leave" element={<MangLeaveManagement />} />
+          <Route path="projectmanagement" element={<MangProManagement />} />
+          <Route path="profilemanagement" element={<ManProfileManagement />} />
+          <Route path="leavemanagement" element={<MangLeaveManagement />} />
         </Route>
       </Route>
 

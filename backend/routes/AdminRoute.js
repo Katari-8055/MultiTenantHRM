@@ -3,6 +3,7 @@ import { AuthenticateMiddleware, authorize } from '../middlewares/AuthMiddleware
 import { addDepartment, addProject, deleteProject, getDashboardStats, getDepartment, getEmployee, getProject } from '../Controllers/AdminComtroller.js';
 import { applyLeave, getEmpProjects, getLeaves } from '../Controllers/EmpController.js';
 import { getHRLeaves, updateLeaveStatus, getHrDashboardStats } from '../Controllers/HRControllers.js';
+import { getManagerProjects, updateProjectStatus, getManagerDashboardStats } from '../Controllers/ManagerController.js';
 
 
 const router = express.Router();
@@ -23,6 +24,9 @@ router.get('/getHRLeave',AuthenticateMiddleware,authorize('ADMIN', 'HR'), getHRL
 router.post('/updateLeaveStatus',AuthenticateMiddleware,authorize('ADMIN', 'HR'), updateLeaveStatus);
 router.get('/hr-dashboard-stats', AuthenticateMiddleware, authorize('ADMIN', 'HR'), getHrDashboardStats);
 
-
+//====================== MANAGER ======================//
+router.get('/manager-dashboard-stats', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerDashboardStats);
+router.get('/manager-projects', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerProjects);
+router.put('/manager-project/:projectId/status', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), updateProjectStatus);
 
 export default router;
