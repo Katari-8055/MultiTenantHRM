@@ -35,7 +35,7 @@ app.use('/api/', limiter); // Apply rate limit to all /api routes
 app.use(cors({
   origin: config.frontendUrl,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
 
 app.use(cookieParser());

@@ -1,9 +1,9 @@
 import express from 'express';
 import { AuthenticateMiddleware, authorize } from '../middlewares/AuthMiddleware.js';
 import { addDepartment, addProject, deleteProject, getDashboardStats, getDepartment, getEmployee, getProject } from '../Controllers/AdminComtroller.js';
-import { applyLeave, getEmpProjects, getLeaves } from '../Controllers/EmpController.js';
+import { applyLeave, getEmpProjects, getLeaves, getEmpTasks, updateEmpTaskStatus } from '../Controllers/EmpController.js';
 import { getHRLeaves, updateLeaveStatus, getHrDashboardStats } from '../Controllers/HRControllers.js';
-import { getManagerProjects, updateProjectStatus, getManagerDashboardStats, getManagerLeaves, updateManagerLeaveStatus } from '../Controllers/ManagerController.js';
+import { getManagerProjects, updateProjectStatus, getManagerDashboardStats, getManagerLeaves, updateManagerLeaveStatus, getManagerTasks, createTask, updateTaskStatus, deleteTask } from '../Controllers/ManagerController.js';
 
 
 const router = express.Router();
@@ -30,5 +30,13 @@ router.get('/manager-projects', AuthenticateMiddleware, authorize('MANAGER', 'AD
 router.put('/manager-project/:projectId/status', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), updateProjectStatus);
 router.get('/manager-leaves', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerLeaves);
 router.put('/manager-leave-status', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), updateManagerLeaveStatus);
+
+router.get('/manager-tasks', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerTasks);
+router.post('/manager-task', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), createTask);
+router.put('/manager-task/:taskId', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), updateTaskStatus);
+router.delete('/manager-task/:taskId', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), deleteTask);
+
+router.get('/emp-tasks', AuthenticateMiddleware, authorize('EMPLOYEE', 'ADMIN'), getEmpTasks);
+router.patch('/emp-task-status/:taskId', AuthenticateMiddleware, authorize('EMPLOYEE', 'ADMIN'), updateEmpTaskStatus);
 
 export default router;

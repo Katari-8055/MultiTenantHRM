@@ -257,3 +257,145 @@ export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({ success: true, message: `Leave ${managerStatus} by Manager`, leave: updatedLeave });
 });
+
+//-----------------------------------------------------Get Manager Tasks-----------------------------------------------------//
+
+export const getManagerTasks = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+
+    if (!tenantId || !employeeId) {
+        return res.status(400).json({ message: "tenantId and employeeId are required" });
+    }
+
+    const tasks = await prisma.task.findMany({
+        where: {
+            tenantId,
+            creatorId: employeeId
+        },
+        include: {
+            assignee: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    role: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+
+    res.status(200).json({ success: true, tasks });
+});
+
+//-----------------------------------------------------Create Task-----------------------------------------------------//
+
+export const createTask = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+    const { title, description, priority, assigneeId } = req.body;
+
+    if (!title || !assigneeId) {
+        return res.status(400).json({ message: "Title and Assignee are required" });
+    }
+
+    const task = await prisma.task.create({
+        data: {
+            title,
+            description,
+            priority,
+            assigneeId,
+            creatorId: employeeId,
+            tenantId
+        },
+        include: {
+            assignee: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                }
+            }
+        }
+    });
+
+    // Notify the assignee
+    await prisma.notification.create({
+        data: {
+            userId: assigneeId,
+            title: "New Task Assigned",
+            message: `You have been assigned a new task: ${title}`,
+            type: "TASK"
+        }
+    });
+
+    if (req.io) {
+        req.io.to(assigneeId).emit("task-assigned", { task });
+    }
+
+    res.status(201).json({ success: true, message: "Task created successfully", task });
+});
+
+//-----------------------------------------------------Update Task Status-----------------------------------------------------//
+
+export const updateTaskStatus = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+    const { taskId } = req.params;
+    const { status, priority, title, description } = req.body;
+
+    // Verify task ownership or authorization (Only creator can update details, but ANYONE (assignee/creator) can update status?)
+    // Typically, only the assignee or creator can update status.
+    const existingTask = await prisma.task.findFirst({
+        where: { id: taskId, tenantId }
+    });
+
+    if (!existingTask) {
+        return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Role check: Only creator or assignee can update
+    if (existingTask.creatorId !== employeeId && existingTask.assigneeId !== employeeId) {
+        return res.status(403).json({ message: "Unauthorized to update this task" });
+    }
+
+    const updatedTask = await prisma.task.update({
+        where: { id: taskId },
+        data: {
+            status,
+            priority,
+            title,
+            description
+        },
+        include: {
+            assignee: {
+                select: { id: true, firstName: true, lastName: true, email: true }
+            }
+        }
+    });
+
+    res.status(200).json({ success: true, message: "Task updated successfully", task: updatedTask });
+});
+
+//-----------------------------------------------------Delete Task-----------------------------------------------------//
+
+export const deleteTask = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+    const { taskId } = req.params;
+
+    const existingTask = await prisma.task.findFirst({
+        where: { id: taskId, tenantId, creatorId: employeeId }
+    });
+
+    if (!existingTask) {
+        return res.status(404).json({ message: "Task not found or unauthorized to delete" });
+    }
+
+    await prisma.task.delete({
+        where: { id: taskId }
+    });
+
+    res.status(200).json({ success: true, message: "Task deleted successfully" });
+});
