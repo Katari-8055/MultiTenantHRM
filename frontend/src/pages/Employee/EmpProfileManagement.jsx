@@ -1,8 +1,9 @@
 import React from 'react'
+import ProfileManagement from '../../components/Employee/Profile/ProfileManagement'
 
 const EmpProfileManagement = () => {
   return (
-    <div>EmpProfileManagement</div>
+    <ProfileManagement />
   )
 }
 
