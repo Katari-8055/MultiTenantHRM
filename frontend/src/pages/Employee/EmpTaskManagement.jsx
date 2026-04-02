@@ -1,9 +1,14 @@
-import React from 'react'
+import React from "react";
+import EmpTaskManagement from "../../components/Employee/Tasks/EmpTaskManagement";
 
-const EmpTaskManagement = () => {
+const EmpTaskManagementPage = () => {
   return (
-    <div>EmpTaskManagement</div>
-  )
-}
+    <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+      <div className="max-w-7xl mx-auto">
+        <EmpTaskManagement />
+      </div>
+    </div>
+  );
+};
 
-export default EmpTaskManagement
+export default EmpTaskManagementPage;

@@ -21,6 +21,7 @@ import MangDashboard from "./pages/Manager/MangDashboard.jsx";
 import MangLeaveManagement from "./pages/Manager/MangLeaveManagement.jsx";
 import ManProfileManagement from "./pages/Manager/ManProfileManagement.jsx";
 import MangProManagement from "./pages/Manager/MangProManagement.jsx";
+import TaskManagementPage from "./pages/Manager/TaskManagementPage.jsx";
 import EmpDashboard from "./pages/Employee/EmpDashboard.jsx";
 import EmpTaskManagement from "./pages/Employee/EmpTaskManagement.jsx";
 import EmpProfileManagement from "./pages/Employee/EmpProfileManagement.jsx";
@@ -67,6 +68,7 @@ const App = () => {
           <Route path="projectmanagement" element={<MangProManagement />} />
           <Route path="profilemanagement" element={<ManProfileManagement />} />
           <Route path="leavemanagement" element={<MangLeaveManagement />} />
+          <Route path="taskmanagement" element={<TaskManagementPage />} />
         </Route>
       </Route>
 

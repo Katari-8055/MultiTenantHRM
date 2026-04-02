@@ -18,6 +18,7 @@ import { NavLink } from "react-router-dom";
 const menuItems = [
   { title: "Dashboard", to: "/manager/dashboard", icon: <LayoutDashboard size={20} /> },
   { title: "Project Management", to: "/manager/projectmanagement", icon: <Calendar size={20} /> },
+  { title: "Task Management", to: "/manager/taskmanagement", icon: <CheckSquare size={20} /> },
   { title: "Leave Management", to: "/manager/leavemanagement", icon: <Palmtree size={20} /> },
   { title: "Profile Management", to: "/manager/profilemanagement", icon: <Settings size={20} /> },
 ];
@@ -83,7 +84,7 @@ const MangSidebar = ({ logout }) => {
         {profileOpen && !collapsed && (
           <div className="mt-2 bg-white border rounded shadow-md">
             <NavLink
-              to="/hr/profile"
+              to="/manager/profilemanagement"
               onClick={() => setProfileOpen(false)}
               className="block px-4 py-2 text-sm hover:bg-gray-100"
             >
