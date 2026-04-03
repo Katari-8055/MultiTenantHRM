@@ -203,3 +203,76 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({ success: true, message: "Task status updated successfully", task: updatedTask });
 });
+
+//---------------------------------------Employee Dashboard Stats---------------------------------------//
+
+export const getEmpDashboardStats = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+
+    if (!tenantId || !employeeId) {
+        return res.status(400).json({ message: "tenantId and employeeId are required" });
+    }
+
+    // Counts
+    const taskCount = await prisma.task.count({
+        where: {
+            tenantId,
+            assigneeId: employeeId,
+            status: { in: ['TODO', 'IN_PROGRESS'] }
+        }
+    });
+
+    const projectCount = await prisma.project.count({
+        where: {
+            tenantId,
+            members: { some: { id: employeeId } }
+        }
+    });
+
+    const leaveStats = await prisma.leave.findMany({
+        where: { tenantId, employeeId },
+        select: { status: true }
+    });
+
+    const pendingLeaves = leaveStats.filter(l => l.status === 'PENDING').length;
+    const approvedLeaves = leaveStats.filter(l => l.status === 'APPROVED').length;
+
+    // Recent Tasks
+    const recentTasks = await prisma.task.findMany({
+        where: { tenantId, assigneeId: employeeId },
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+            creator: {
+                select: { firstName: true, lastName: true }
+            }
+        }
+    });
+
+    // Active Projects
+    const activeProjects = await prisma.project.findMany({
+        where: {
+            tenantId,
+            members: { some: { id: employeeId } },
+            status: 'ONGOING'
+        },
+        take: 3,
+        include: {
+            manager: {
+                select: { firstName: true, lastName: true }
+            }
+        }
+    });
+
+    res.status(200).json({
+        success: true,
+        stats: {
+            pendingTasks: taskCount,
+            activeProjects: projectCount,
+            pendingLeaves: pendingLeaves,
+            approvedLeaves: approvedLeaves
+        },
+        recentTasks,
+        activeProjects
+    });
+});

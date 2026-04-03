@@ -1,7 +1,7 @@
 import express from 'express';
 import { AuthenticateMiddleware, authorize } from '../middlewares/AuthMiddleware.js';
 import { addDepartment, addProject, deleteProject, getDashboardStats, getDepartment, getEmployee, getProject } from '../Controllers/AdminComtroller.js';
-import { applyLeave, getEmpProjects, getLeaves, getEmpTasks, updateEmpTaskStatus } from '../Controllers/EmpController.js';
+import { applyLeave, getEmpProjects, getLeaves, getEmpTasks, updateEmpTaskStatus, getEmpDashboardStats } from '../Controllers/EmpController.js';
 import { getHRLeaves, updateLeaveStatus, getHrDashboardStats } from '../Controllers/HRControllers.js';
 import { getManagerProjects, updateProjectStatus, getManagerDashboardStats, getManagerLeaves, updateManagerLeaveStatus, getManagerTasks, createTask, updateTaskStatus, deleteTask } from '../Controllers/ManagerController.js';
 
@@ -38,5 +38,6 @@ router.delete('/manager-task/:taskId', AuthenticateMiddleware, authorize('MANAGE
 
 router.get('/emp-tasks', AuthenticateMiddleware, authorize('EMPLOYEE', 'ADMIN'), getEmpTasks);
 router.patch('/emp-task-status/:taskId', AuthenticateMiddleware, authorize('EMPLOYEE', 'ADMIN'), updateEmpTaskStatus);
+router.get('/emp-dashboard-stats', AuthenticateMiddleware, authorize('EMPLOYEE', 'ADMIN'), getEmpDashboardStats);
 
 export default router;

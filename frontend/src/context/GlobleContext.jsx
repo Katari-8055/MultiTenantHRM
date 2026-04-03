@@ -74,13 +74,14 @@ export const GlobleProvider = ({ children }) => {
   const [hrStats, setHrStats] = useState(null);
   const [managerProjects, setManagerProjects] = useState([]);
   const [managerStats, setManagerStats] = useState(null);
+  const [empStats, setEmpStats] = useState(null);
 
   return (
     <GlobleContext.Provider value={{
       user, setUser, loading, employeeList, setEmployeeList, departments, setDepartments, 
       projects, setProjects, empProject, setEmpProject, managerProjects, setManagerProjects,
       leaves, setLeaves, socket, logout, adminStats, setAdminStats, hrStats, setHrStats,
-      managerStats, setManagerStats
+      managerStats, setManagerStats, empStats, setEmpStats
     }}>
       {children}
     </GlobleContext.Provider>
