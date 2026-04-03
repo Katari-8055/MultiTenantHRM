@@ -11,6 +11,7 @@ import DapManagement from "./pages/Admin/DepManagement.jsx";
 import ProManagement from "./pages/Admin/ProManagement.jsx";
 import ProfieManagement from "./pages/Admin/ProfieManagement.jsx";
 import EmpManagement from "./pages/Admin/EmpManagement.jsx";
+import AdminEmpDetailPage from "./pages/Admin/AdminEmpDetailPage.jsx";
 import HrDashboard from "./pages/HR/HrDashboard.jsx";
 import HrDepManagement from "./pages/HR/HrDepManagement.jsx";
 import HrProManagement from "./pages/HR/HrProManagement.jsx";
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="project" element={<ProManagement />} />
           <Route path="profile" element={<ProfieManagement />} />
           <Route path="employee" element={<EmpManagement />} />
+          <Route path="employee/:id" element={<AdminEmpDetailPage />} />
         </Route>
       </Route>
 

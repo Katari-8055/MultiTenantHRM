@@ -71,15 +71,11 @@ const EmployeeList = () => {
                   </td>
 
                   <td className="py-3 px-4 flex gap-2">
-                    <Link to={`/employee/${emp.id}`}>
-                      <button className="p-2 rounded-full hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition cursor-pointer">
-                        <Eye className="w-5 h-5" />
+                    <Link to={`/admin/employee/${emp.id}`}>
+                      <button className="p-2 rounded-full hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-all duration-300 cursor-pointer group">
+                        <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       </button>
                     </Link>
-
-                    <button className="p-2 rounded-full hover:bg-green-50 text-gray-600 hover:text-green-600 transition cursor-pointer">
-                      <Edit className="w-5 h-5" />
-                    </button>
                   </td>
                 </tr>
               ))

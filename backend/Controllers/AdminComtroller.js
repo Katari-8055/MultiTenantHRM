@@ -213,3 +213,84 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
       recentActivity: recentEmployees
   });
 });
+
+//-------------------------------------Get Employee By ID-----------------------------------//
+
+export const getEmployeeById = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+
+  const employee = await prisma.employee.findFirst({
+    where: { 
+      id,
+      tenantId 
+    },
+    include: {
+      department: true
+    }
+  });
+
+  if (!employee) {
+    return res.status(404).json({ success: false, message: "Employee not found" });
+  }
+
+  res.status(200).json({
+    success: true,
+    employee
+  });
+});
+
+//-------------------------------------Update Employee-----------------------------------//
+
+export const updateEmployee = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+  const { 
+    firstName, 
+    lastName, 
+    phone, 
+    gender, 
+    dateOfBirth, 
+    position, 
+    salary, 
+    dateOfJoining, 
+    employmentType, 
+    status, 
+    departmentId 
+  } = req.body;
+
+  // Verify the employee belongs to this tenant
+  const existingEmployee = await prisma.employee.findFirst({
+    where: { id, tenantId }
+  });
+
+  if (!existingEmployee) {
+    return res.status(404).json({ success: false, message: "Employee not found" });
+  }
+
+  const updatedEmployee = await prisma.employee.update({
+    where: { id },
+    data: {
+      firstName,
+      lastName,
+      phone,
+      gender,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      position,
+      salary: salary ? parseFloat(salary) : undefined,
+      dateOfJoining: dateOfJoining ? new Date(dateOfJoining) : undefined,
+      employmentType,
+      status,
+      departmentId: departmentId || undefined
+    },
+    include: {
+      department: true
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Employee updated successfully",
+    employee: updatedEmployee
+  });
+});
