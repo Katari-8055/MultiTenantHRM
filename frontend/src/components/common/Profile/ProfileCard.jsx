@@ -25,8 +25,8 @@ const InfoRow = ({ icon: Icon, label, value, themeColor = "violet" }) => {
   );
 };
 
-const ProfileCard = ({ user, personalInfo, employmentInfo, themeColor = "violet", stats = [] }) => {
-  const initials = `${personalInfo.firstName.charAt(0)}${personalInfo.lastName.charAt(0)}`.toUpperCase() || "U";
+const ProfileCard = ({ user, personalInfo, employmentInfo, themeColor = "violet" }) => {
+  const initials = `${personalInfo.firstName?.charAt(0) || ""}${personalInfo.lastName?.charAt(0) || ""}`.toUpperCase() || "U";
 
   const gradientClasses = {
     violet: "from-violet-400 via-fuchsia-500 to-violet-700 shadow-violet-500/30",
@@ -104,24 +104,6 @@ const ProfileCard = ({ user, personalInfo, employmentInfo, themeColor = "violet"
           </div>
         </div>
       </motion.div>
-
-      {/* Optional Stats Snapshot */}
-      {stats.length > 0 && (
-        <motion.div whileHover={{ scale: 1.015 }} className={`bg-gradient-to-br ${gradientClasses} rounded-[2rem] p-7 text-white shadow-2xl relative overflow-hidden`}>
-          <div className="relative z-10">
-            <p className="text-white/80 text-[9px] font-black uppercase tracking-[0.25em] mb-3">Snapshot</p>
-            <div className="grid grid-cols-2 gap-3">
-              {stats.map(({ label, value, icon: Icon }) => (
-                <div key={label} className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
-                  {Icon && <Icon className="w-4 h-4 text-white/70 mb-1.5" />}
-                  <p className="text-xl font-black text-white leading-none">{value}</p>
-                  <p className="text-[9px] font-bold text-white/70 uppercase tracking-wider mt-1">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 };

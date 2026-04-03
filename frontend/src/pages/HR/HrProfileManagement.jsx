@@ -1,9 +1,9 @@
 import React from 'react'
-import HrProfileManagement from '../../components/HR/Profile/HrProfileManagement'
+import UnifiedProfileManagement from '../../components/Common/Profile/UnifiedProfileManagement'
 
 const HrProfilePage = () => {
   return (
-    <HrProfileManagement />
+    <UnifiedProfileManagement />
   )
 }
 

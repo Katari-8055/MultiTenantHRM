@@ -28,14 +28,7 @@ const ProfileHeader = ({ title, subtitle, badgeText, themeColor = "violet" }) =>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">{title}</h1>
-          <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest">{subtitle}</p>
         </div>
-        {badgeText && (
-          <div className={`flex items-center gap-2 px-4 py-2 ${badgeClasses} rounded-full border`}>
-            <Activity className={`w-4 h-4 ${iconClasses} animate-pulse`} />
-            <span className="text-sm font-bold">{badgeText}</span>
-          </div>
-        )}
       </div>
     </motion.div>
   );

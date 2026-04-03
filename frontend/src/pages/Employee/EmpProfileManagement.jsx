@@ -1,9 +1,9 @@
 import React from 'react'
-import ProfileManagement from '../../components/Employee/Profile/ProfileManagement'
+import UnifiedProfileManagement from '../../components/Common/Profile/UnifiedProfileManagement'
 
 const EmpProfileManagement = () => {
   return (
-    <ProfileManagement />
+    <UnifiedProfileManagement />
   )
 }
 

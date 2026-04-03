@@ -1,9 +1,9 @@
 import React from 'react'
-import MangProfileManagement from '../../components/Manager/Profile/MangProfileManagement'
+import UnifiedProfileManagement from '../../components/Common/Profile/UnifiedProfileManagement'
 
 const ManProfileManagementPage = () => {
   return (
-    <MangProfileManagement />
+    <UnifiedProfileManagement />
   )
 }
 
