@@ -6,6 +6,7 @@ import {
   XCircle, Clock, Filter, ChevronDown
 } from "lucide-react";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 
 const API = "http://localhost:3000/api/admin";
 
@@ -24,19 +25,22 @@ export default function MangLeaveManagement() {
   const [updating, setUpdating] = useState(null); // leaveId being updated
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
+  const fetchLeaves = async () => {
+    try {
+      const { data } = await axios.get(`${API}/manager-leaves`, { withCredentials: true });
+      setLeaves(data.leaves || []);
+    } catch (err) {
+      console.error("Error fetching manager leaves:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await axios.get(`${API}/manager-leaves`, { withCredentials: true });
-        setLeaves(data.leaves || []);
-      } catch (err) {
-        console.error("Error fetching manager leaves:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+    fetchLeaves();
   }, []);
+
+  useRealTimeSync('leaves', fetchLeaves);
 
   const filtered = activeTab === "ALL"
     ? leaves

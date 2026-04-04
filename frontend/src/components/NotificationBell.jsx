@@ -5,7 +5,7 @@ import { formatDistanceToNow } from "date-fns"; // Standard for date formatting
 import { motion, AnimatePresence } from "framer-motion";
 
 const NotificationBell = () => {
-    const { notifications, unreadCount, markAsRead, markAllAsRead } = useContext(GlobleContext);
+    const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification, clearAllNotifications } = useContext(GlobleContext);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -53,13 +53,23 @@ const NotificationBell = () => {
                                 <h3 className="text-lg font-bold text-gray-800">Notifications</h3>
                                 <p className="text-xs text-gray-500">{unreadCount} unread messages</p>
                             </div>
-                            {unreadCount > 0 && (
-                                <button
-                                    onClick={markAllAsRead}
-                                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                                >
-                                    Mark all as read
-                                </button>
+                            {notifications.length > 0 && (
+                                <div className="flex gap-3">
+                                    {unreadCount > 0 && (
+                                        <button
+                                            onClick={markAllAsRead}
+                                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                                        >
+                                            Mark all read
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={clearAllNotifications}
+                                        className="text-xs font-semibold text-red-500 hover:text-red-600 hover:underline transition-all"
+                                    >
+                                        Clear all
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -71,7 +81,7 @@ const NotificationBell = () => {
                                         <div
                                             key={notification.id}
                                             onClick={() => !notification.read && markAsRead(notification.id)}
-                                            className={`p-4 border-b border-gray-100/50 cursor-pointer transition-all hover:bg-white/40 flex gap-3 ${!notification.read ? 'bg-blue-50/30' : ''}`}
+                                            className={`p-4 border-b border-gray-100/50 cursor-pointer transition-all hover:bg-white/40 flex gap-3 group ${!notification.read ? 'bg-blue-50/30' : ''}`}
                                         >
                                             {/* Type Icon Indicator */}
                                             <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notification.read ? 'bg-blue-500 ring-4 ring-blue-500/20' : 'bg-transparent'}`} />
@@ -90,7 +100,7 @@ const NotificationBell = () => {
                                                 </p>
                                                 
                                                 {/* Meta */}
-                                                <div className="mt-2 flex items-center gap-2">
+                                                <div className="mt-2 flex items-center justify-between">
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${
                                                         notification.type === 'LEAVE' ? 'bg-purple-100 text-purple-600' :
                                                         notification.type === 'TASK' ? 'bg-orange-100 text-orange-600' :
@@ -98,6 +108,16 @@ const NotificationBell = () => {
                                                     }`}>
                                                         {notification.type}
                                                     </span>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            clearNotification(notification.id);
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-all"
+                                                        title="Delete Notification"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

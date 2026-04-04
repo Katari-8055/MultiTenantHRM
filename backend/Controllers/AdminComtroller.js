@@ -17,6 +17,11 @@ export const addDepartment = asyncHandler(async (req, res, next) => {
         }
     });
 
+    if (req.io) {
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'departments' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    }
+
     res.status(201).json({
         success: true,
         message: "Department added successfully",
@@ -109,6 +114,10 @@ export const addProject = asyncHandler(async (req, res, next) => {
   },
 });
 
+  if (req.io) {
+      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
+      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+  }
 
   return res.status(201).json({
     message: "Project created successfully",
@@ -145,9 +154,16 @@ export const getProject = asyncHandler(async (req, res, next) => {
 
 export const deleteProject = asyncHandler(async (req, res, next) => {
   const { projectId } = req.params;
+  const tenantId = req.tenantId;
   await prisma.project.delete({
     where: { id: projectId }
   })
+
+  if (req.io && tenantId) {
+      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
+      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+  }
+
   res.status(200).json({
     success: true,
     message: "Project deleted successfully"
@@ -287,6 +303,10 @@ export const updateEmployee = asyncHandler(async (req, res, next) => {
       department: true
     }
   });
+
+  if (req.io) {
+      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
+  }
 
   res.status(200).json({
     success: true,

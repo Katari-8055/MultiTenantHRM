@@ -111,6 +111,30 @@ export const GlobleProvider = ({ children }) => {
     }
   };
 
+  const clearNotification = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/notifications/${id}`, { withCredentials: true });
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      // Need to adjust unread count if the deleted notification was unread
+      const notif = notifications.find(n => n.id === id);
+      if (notif && !notif.read) {
+         setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.log("Error clearing notification:", error);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await axios.delete("http://localhost:3000/api/notifications/clear-all", { withCredentials: true });
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.log("Error clearing all notifications:", error);
+    }
+  };
+
   const logout = async () => {
 
     try {
@@ -145,7 +169,8 @@ export const GlobleProvider = ({ children }) => {
       projects, setProjects, empProject, setEmpProject, managerProjects, setManagerProjects,
       leaves, setLeaves, socket, logout, adminStats, setAdminStats, hrStats, setHrStats,
       managerStats, setManagerStats, empStats, setEmpStats, 
-      notifications, setNotifications, unreadCount, markAsRead, markAllAsRead
+      notifications, setNotifications, unreadCount, markAsRead, markAllAsRead,
+      clearNotification, clearAllNotifications
     }}>
 
       {children}

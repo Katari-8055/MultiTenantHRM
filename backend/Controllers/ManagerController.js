@@ -70,6 +70,11 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
         }
     });
 
+    if (req.io) {
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    }
+
     res.status(200).json({ success: true, message: "Project status updated", project: updatedProject });
 });
 
@@ -255,6 +260,8 @@ export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
 
     if (req.io) {
         req.io.to(updatedLeave.employeeId).emit("new-notification", notification);
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
 
 
@@ -337,6 +344,8 @@ export const createTask = asyncHandler(async (req, res, next) => {
 
     if (req.io) {
         req.io.to(assigneeId).emit("new-notification", notification);
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
 
 
@@ -380,6 +389,18 @@ export const updateTaskStatus = asyncHandler(async (req, res, next) => {
         }
     });
 
+    if (req.io) {
+        // Find if there is a notification target (assignee if creator updated, creator if assignee updated)
+        const targetId = existingTask.creatorId === employeeId ? existingTask.assigneeId : existingTask.creatorId;
+        req.io.to(targetId).emit("new-notification", {
+            message: `Task "${title || existingTask.title}" was updated`,
+            userId: targetId,
+            type: "TASK"
+        });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    }
+
     res.status(200).json({ success: true, message: "Task updated successfully", task: updatedTask });
 });
 
@@ -400,6 +421,11 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
     await prisma.task.delete({
         where: { id: taskId }
     });
+
+    if (req.io) {
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    }
 
     res.status(200).json({ success: true, message: "Task deleted successfully" });
 });

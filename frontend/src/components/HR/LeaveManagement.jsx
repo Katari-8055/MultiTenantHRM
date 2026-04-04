@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2, ClipboardCheck, Calendar, Crown } from "lucide-react";
 import axios from "axios";
 import { GlobleContext } from "../../context/GlobleContext";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync";
 
 const API = "http://localhost:3000/api/admin";
 
@@ -42,6 +43,8 @@ export default function HRLeaveManagement() {
   };
 
   useEffect(() => { fetchLeaves(); }, []);
+
+  useRealTimeSync('leaves', fetchLeaves);
 
   const filtered = filter === "ALL" ? (leaves || []) : (leaves || []).filter(l => l.hrStatus === filter || (filter === "PENDING" && !l.hrStatus));
 

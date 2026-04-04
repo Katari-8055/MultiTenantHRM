@@ -89,6 +89,8 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
   // ⚡ Emit real-time event
   if (req.io) {
     req.io.to(leave.employeeId).emit("new-notification", notification);
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
 
 

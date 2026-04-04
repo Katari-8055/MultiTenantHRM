@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Target
 } from "lucide-react";
+import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 const EmpTaskManagement = () => {
   const [tasks, setTasks] = useState([]);
@@ -43,10 +44,6 @@ const EmpTaskManagement = () => {
     COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
   const fetchTasks = async () => {
     try {
       const res = await axios.get("http://localhost:3000/api/admin/emp-tasks", { withCredentials: true });
@@ -57,6 +54,12 @@ const EmpTaskManagement = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  useRealTimeSync('tasks', fetchTasks);
 
   const handleStatusUpdate = async (taskId, newStatus) => {
     setUpdatingId(taskId);

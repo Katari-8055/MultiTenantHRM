@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AddProjectForm from "./AddProjectForm";
 import axios from "axios";
 import { GlobleContext } from "../../../context/GlobleContext";
+import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 export default function ProjectManagement() {
   const [activeTab, setActiveTab] = useState("all");
@@ -58,6 +59,8 @@ export default function ProjectManagement() {
   useEffect(() => {
     getProject();
   }, []);
+
+  useRealTimeSync('projects', getProject);
 
   return (
     <div className="p-6">

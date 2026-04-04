@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { Loader2, FolderTree, Users, Palmtree, CheckCircle } from "lucide-react";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 import StatsCard from "../../components/Admin/Dashboard/StatsCard.jsx";
 import MangRecentLeaves from "../../components/Manager/Dashboard/MangRecentLeaves.jsx";
 import MangProjectChart from "../../components/Manager/Dashboard/MangProjectChart.jsx";
@@ -10,29 +11,31 @@ const MangDashboard = () => {
   const { managerStats, setManagerStats } = useContext(GlobleContext);
   const [loading, setLoading] = useState(!managerStats);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      // Don't show loading overlay if data already exists in context
-      if (managerStats) {
-        setLoading(false);
-      }
+  const fetchStats = async () => {
+    // Don't show loading overlay if data already exists in context
+    if (managerStats) {
+      setLoading(false);
+    }
 
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/manager-dashboard-stats", {
-          withCredentials: true,
-        });
-        if (res.data.success) {
-          setManagerStats(res.data);
-        }
-      } catch (error) {
-        console.error("Dashboard Error:", error);
-      } finally {
-        setLoading(false);
+    try {
+      const res = await axios.get("http://localhost:3000/api/admin/manager-dashboard-stats", {
+        withCredentials: true,
+      });
+      if (res.data.success) {
+        setManagerStats(res.data);
       }
-    };
-    
+    } catch (error) {
+      console.error("Dashboard Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
   }, [setManagerStats]); // managerStats is deliberately omitted to prevent infinite loops
+
+  useRealTimeSync('stats', fetchStats);
 
   if (loading) {
     return (

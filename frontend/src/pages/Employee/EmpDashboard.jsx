@@ -16,32 +16,36 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 import StatsCard from "../../components/Admin/Dashboard/StatsCard.jsx";
 
 const EmpDashboard = () => {
   const { user, empStats, setEmpStats } = useContext(GlobleContext);
   const [loading, setLoading] = useState(!empStats);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      // If data already exists, don't show loading state
-      if (empStats) {
-        setLoading(false);
-      }
+  const fetchStats = async () => {
+    // If data already exists, don't show loading state
+    if (empStats) {
+      setLoading(false);
+    }
 
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/emp-dashboard-stats", {
-          withCredentials: true,
-        });
-        setEmpStats(res.data);
-      } catch (error) {
-        console.error("Dashboard Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const res = await axios.get("http://localhost:3000/api/admin/emp-dashboard-stats", {
+        withCredentials: true,
+      });
+      setEmpStats(res.data);
+    } catch (error) {
+      console.error("Dashboard Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
   }, [setEmpStats]);
+
+  useRealTimeSync('stats', fetchStats);
 
   if (loading) {
     return (

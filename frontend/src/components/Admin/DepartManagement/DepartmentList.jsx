@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { GlobleContext } from "../../../context/GlobleContext";
 import axios from "axios";
+import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 const DepartmentList = () => {
   const [expandedDept, setExpandedDept] = useState(null);
@@ -45,6 +46,7 @@ const DepartmentList = () => {
     getDepartment();
   }, []);
 
+  useRealTimeSync('departments', getDepartment);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 p-8 space-y-8">

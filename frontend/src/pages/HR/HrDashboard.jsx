@@ -9,31 +9,35 @@ import HrRecentActivity from "../../components/HR/Dashboard/HrRecentActivity.jsx
 
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useContext } from "react";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 
 const HrDashboard = () => {
   const { hrStats, setHrStats } = useContext(GlobleContext);
   const [loading, setLoading] = useState(!hrStats);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      // If data already exists, don't show loading state
-      if (hrStats) {
-        setLoading(false);
-      }
+  const fetchStats = async () => {
+    // If data already exists, don't show loading state
+    if (hrStats) {
+      setLoading(false);
+    }
 
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/hr-dashboard-stats", {
-          withCredentials: true,
-        });
-        setHrStats(res.data);
-      } catch (error) {
-        console.error("HR Dashboard Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const res = await axios.get("http://localhost:3000/api/admin/hr-dashboard-stats", {
+        withCredentials: true,
+      });
+      setHrStats(res.data);
+    } catch (error) {
+      console.error("HR Dashboard Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
   }, []);
+
+  useRealTimeSync('stats', fetchStats);
 
   if (loading) {
     return (

@@ -19,6 +19,26 @@ import config from './config/config.js';
 
 const PORT = config.port;
 const app = express();
+const server = http.createServer(app);
+
+/* ======================
+   SOCKET.IO SETUP
+====================== */
+const io = new Server(server, {
+  cors: {
+    origin: config.frontendUrl,
+    credentials: true,
+  },
+});
+
+// 🔐 socket auth
+io.use(SocketAuth);
+
+// Attach io to requests
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Security and Performance Middlewares
 app.use(helmet()); // Sets various HTTP headers for security
@@ -69,26 +89,7 @@ app.use('/api/notifications', notificationRouter);
 // Standard Error Handler (Always last)
 app.use(errorMiddleware);
 
-/* ======================
-   SOCKET.IO SETUP
-====================== */
-const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: config.frontendUrl,
-    credentials: true,
-  },
-});
-
-// 🔐 socket auth
-io.use(SocketAuth);
-
-// Attach io to requests
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
 
 /* ======================
    SOCKET EVENTS
@@ -99,8 +100,16 @@ io.on('connection', (socket) => {
   }
 
   socket.on('join', () => {
-    if (socket.user?.id) {
-      socket.join(socket.user.id);
+    if (socket.user) {
+      // The JWT payload uses 'employeeId' for employees, and we can fallback to 'tenantId' for admins
+      const userId = socket.user.employeeId || socket.user.tenantId;
+      if (userId) {
+        socket.join(userId);
+      }
+      
+      if (socket.user.tenantId) {
+        socket.join(`tenant_${socket.user.tenantId}`);
+      }
     }
   });
 

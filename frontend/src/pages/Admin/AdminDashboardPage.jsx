@@ -9,31 +9,31 @@ import RecentActivity from "../../components/Admin/Dashboard/RecentActivity.jsx"
 
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useContext } from "react";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 
 const AdminDashboardPage = () => {
   const { adminStats, setAdminStats } = useContext(GlobleContext);
   const [loading, setLoading] = useState(!adminStats);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      // If data already exists, don't show loading state
-      if (adminStats) {
-        setLoading(false);
-      }
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/admin/dashboard-stats", {
+        withCredentials: true,
+      });
+      setAdminStats(res.data);
+    } catch (error) {
+      console.error("Dashboard Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/dashboard-stats", {
-          withCredentials: true,
-        });
-        setAdminStats(res.data);
-      } catch (error) {
-        console.error("Dashboard Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  useEffect(() => {
+    if (adminStats) setLoading(false);
     fetchStats();
   }, []);
+
+  useRealTimeSync('stats', fetchStats);
 
   if (loading) {
     return (

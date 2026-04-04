@@ -20,6 +20,7 @@ import {
   X
 } from "lucide-react";
 import { GlobleContext } from "../../../context/GlobleContext";
+import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 const TaskManagement = () => {
   const [tasks, setTasks] = useState([]);
@@ -50,10 +51,6 @@ const TaskManagement = () => {
     COMPLETED: "bg-teal-600 text-white shadow-lg shadow-teal-600/20",
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       const [tasksRes, empRes] = await Promise.all([
@@ -68,6 +65,12 @@ const TaskManagement = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useRealTimeSync('tasks', fetchData);
 
   const handleCreateTask = async (e) => {
     e.preventDefault();

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, Calendar, LayoutGrid, Users, CheckCircle, Clock } from "lucide-react";
 import StatusBadge from "../../components/common/StatusBadge.jsx";
@@ -11,23 +12,26 @@ const MangProManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/manager-projects", {
-          withCredentials: true,
-        });
-        if (res.data.success) {
-          setManagerProjects(res.data.projects);
-        }
-      } catch (error) {
-        console.error("Failed to fetch manager projects:", error);
-      } finally {
-        setLoading(false);
+  const fetchProjects = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/admin/manager-projects", {
+        withCredentials: true,
+      });
+      if (res.data.success) {
+        setManagerProjects(res.data.projects);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch manager projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProjects();
   }, [setManagerProjects]);
+
+  useRealTimeSync('projects', fetchProjects);
 
   const handleStatusUpdate = async (projectId, newStatus) => {
     setUpdatingId(projectId);

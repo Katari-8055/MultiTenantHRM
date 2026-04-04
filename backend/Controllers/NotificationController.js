@@ -54,3 +54,39 @@ export const markAllNotificationsRead = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({ success: true, message: "All notifications marked as read" });
 });
+
+//---------------------------------------Clear Notification---------------------------------------//
+export const deleteNotification = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const { employeeId } = req; // In auth middleware we added employeeId if employee
+
+    // Just in case it's a tenant admin, they might have tenantId but no employeeId.
+    // the system currently associates notifications via userId.
+    const userId = employeeId || req.tenantId;
+
+    const notification = await prisma.notification.findFirst({
+        where: { id, userId: userId }
+    });
+
+    if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+    }
+
+    await prisma.notification.delete({
+        where: { id }
+    });
+
+    res.status(200).json({ success: true, message: "Notification deleted" });
+});
+
+//---------------------------------------Clear All Notifications---------------------------------------//
+export const clearAllNotifications = asyncHandler(async (req, res, next) => {
+    const { employeeId, tenantId } = req;
+    const userId = employeeId || tenantId;
+
+    await prisma.notification.deleteMany({
+        where: { userId: userId }
+    });
+
+    res.status(200).json({ success: true, message: "All notifications cleared" });
+});

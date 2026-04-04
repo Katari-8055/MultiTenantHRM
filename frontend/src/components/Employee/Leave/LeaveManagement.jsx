@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { CalendarDays, PlusCircle, Loader2, FileText, CheckCircle2, XCircle, Clock, Crown, User2 } from "lucide-react";
 import LeaveManagementForm from "./LeaveManagementForm";
-import socket from "../../../utils/socket";
 import { GlobleContext } from "../../../context/GlobleContext";
+import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 const TABS = ["ALL", "PENDING", "APPROVED", "REJECTED"];
 
@@ -85,12 +85,9 @@ export default function LeaveManagement() {
 
   useEffect(() => {
     fetchLeaves();
-    if (userId) socket.emit("join", userId);
-    socket.on("leave-updated", ({ leave }) => {
-      setLeaves(prev => prev.map(l => l.id === leave.id ? { ...l, ...leave } : l));
-    });
-    return () => socket.off("leave-updated");
   }, [userId]);
+
+  useRealTimeSync('leaves', fetchLeaves);
 
   const handleNewLeave = (newLeave) => {
     setLeaves(prev => [newLeave, ...prev]);

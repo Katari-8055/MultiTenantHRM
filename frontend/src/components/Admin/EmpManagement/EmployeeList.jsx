@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
 import { GlobleContext } from "../../../context/GlobleContext";
+import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 import AddEmployeeForm from "./AddEmployeeForm.jsx";
 
@@ -28,6 +29,8 @@ const EmployeeList = () => {
   useEffect(() => {
     getEmployee();
   }, []);
+
+  useRealTimeSync('employees', getEmployee);
 
   return (
     <div className="p-6">

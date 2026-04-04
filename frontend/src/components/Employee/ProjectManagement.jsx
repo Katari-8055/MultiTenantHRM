@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
+import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Briefcase, Calendar, Users, Crown, FolderOpen } from "lucide-react";
 import StatusBadge from "../common/StatusBadge.jsx";
@@ -11,22 +12,25 @@ export default function ProjectManagement() {
 
   const { empProject, setEmpProject } = useContext(GlobleContext);
 
+  const fetchProjects = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/admin/getEmpProject",
+        { withCredentials: true }
+      );
+      setEmpProject(res.data.projects || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:3000/api/admin/getEmpProject",
-          { withCredentials: true }
-        );
-        setEmpProject(res.data.projects || []);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProjects();
   }, [setEmpProject]);
+
+  useRealTimeSync('projects', fetchProjects);
 
   const filteredProjects =
     activeTab === "all"

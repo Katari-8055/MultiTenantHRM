@@ -94,7 +94,12 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
 
         if (req.io) {
             req.io.to(resolvedManagerId).emit("new-notification", notification);
+            req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
+            req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
         }
+    } else if (req.io) {
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
 
     res.status(201).json({ message: "Leave applied successfully", leave: newLeave });
@@ -221,6 +226,8 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
 
     if (req.io) {
         req.io.to(updatedTask.creatorId).emit("new-notification", notification);
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
 
 
