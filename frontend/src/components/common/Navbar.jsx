@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlobleContext } from "../../context/GlobleContext";
+import NotificationBell from "../NotificationBell";
+
 
 const Navbar = () => {
   const { user, logout } = useContext(GlobleContext);
   const [showProfile, setShowProfile] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+
   const [searchFocused, setSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -28,11 +30,7 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const notifications = [
-    { id: 1, title: "New Task Assigned", time: "2m ago", type: "TASK" },
-    { id: 2, title: "Leave Approved", time: "1h ago", type: "LEAVE" },
-    { id: 3, title: "System Update", time: "5h ago", type: "SYSTEM" },
-  ];
+
 
   return (
     <nav className={`sticky top-0 z-40 transition-all duration-300 ${
@@ -75,46 +73,8 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           
           {/* Notifications */}
-          <div className="relative">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="w-11 h-11 bg-white border border-slate-200 rounded-2xl flex items-center justify-center relative hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm shadow-slate-100/50"
-            >
-              <Bell className="w-5 h-5 text-slate-600" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white" />
-            </motion.button>
-            
-            <AnimatePresence>
-              {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-4 w-80 bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden p-2"
-                >
-                  <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Notifications</span>
-                    <button className="text-[9px] font-bold text-emerald-600 hover:text-emerald-700">Clear All</button>
-                  </div>
-                  <div className="py-2">
-                    {notifications.map(n => (
-                      <button key={n.id} className="w-full text-left p-3 hover:bg-slate-50 rounded-2xl transition-colors flex gap-3 group">
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
-                           <Zap className="w-4 h-4 text-slate-400 group-hover:text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-700">{n.title}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{n.time}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <NotificationBell />
+
 
           <div className="h-8 w-[1px] bg-slate-200/60 hidden md:block" />
 

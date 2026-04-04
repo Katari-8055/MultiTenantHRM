@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import React, { useContext } from "react";
+import { Toaster } from "react-hot-toast";
+
 import Login from "./pages/Auth/Login.jsx";
 import Home from "./pages/Home.jsx";
 import SignUp from "./pages/Auth/SignUp.jsx";
@@ -33,7 +35,10 @@ import EmpProject from "./pages/Employee/EmpProject.jsx";
 const App = () => {
 
   return (
-    <Routes>
+    <>
+      <Toaster />
+      <Routes>
+
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
@@ -85,6 +90,8 @@ const App = () => {
         </Route>
       </Route>
     </Routes>
+    </>
+
   );
 };
 

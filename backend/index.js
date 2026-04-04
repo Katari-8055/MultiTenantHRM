@@ -11,6 +11,8 @@ import { Server } from 'socket.io';
 
 import router from './routes/AuthRoute.js';
 import router1 from './routes/AdminRoute.js';
+import notificationRouter from './routes/NotificationRoute.js';
+
 import { SocketAuth } from './middlewares/SocketAuth.js';
 import errorMiddleware from './middlewares/errorMiddleware.js';
 import config from './config/config.js';
@@ -61,6 +63,8 @@ app.get('/', (req, res) => {
 ====================== */
 app.use('/api/auth', router);
 app.use('/api/admin', router1);
+app.use('/api/notifications', notificationRouter);
+
 
 // Standard Error Handler (Always last)
 app.use(errorMiddleware);

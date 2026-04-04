@@ -75,9 +75,30 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
             endDate: new Date(endDate),
             reason,
             appliedAt: new Date()
+        },
+        include: {
+            employee: { select: { firstName: true, lastName: true } }
         }
     });
+
+    // Notify the manager if there is one
+    if (resolvedManagerId) {
+        const notification = await prisma.notification.create({
+            data: {
+                userId: resolvedManagerId,
+                title: "New Leave Application",
+                message: `${newLeave.employee.firstName} ${newLeave.employee.lastName || ''} has applied for ${type} leave.`,
+                type: "LEAVE"
+            }
+        });
+
+        if (req.io) {
+            req.io.to(resolvedManagerId).emit("new-notification", notification);
+        }
+    }
+
     res.status(201).json({ message: "Leave applied successfully", leave: newLeave });
+
 });
 
 
@@ -188,7 +209,8 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
     });
 
     // Notify the creator (e.g. Manager/Admin) about the status update
-    await prisma.notification.create({
+    // Notify the creator (e.g. Manager/Admin) about the status update
+    const notification = await prisma.notification.create({
         data: {
             userId: updatedTask.creatorId,
             title: "Task Status Updated",
@@ -198,8 +220,10 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
     });
 
     if (req.io) {
-        req.io.to(updatedTask.creatorId).emit("task-updated", { task: updatedTask });
+        req.io.to(updatedTask.creatorId).emit("new-notification", notification);
     }
+
+
 
     res.status(200).json({ success: true, message: "Task status updated successfully", task: updatedTask });
 });

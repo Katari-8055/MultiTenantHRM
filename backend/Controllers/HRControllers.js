@@ -87,10 +87,10 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
   });
 
   // ⚡ Emit real-time event
-  req.io.to(leave.employeeId).emit("leave-updated", {
-    leave,
-    notification,
-  });
+  if (req.io) {
+    req.io.to(leave.employeeId).emit("new-notification", notification);
+  }
+
 
   res.json({ success: true, message: `Leave ${globalStatus} by HR`, leave });
 });

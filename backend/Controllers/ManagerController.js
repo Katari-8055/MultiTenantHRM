@@ -253,7 +253,10 @@ export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
         }
     });
 
-    req.io.to(updatedLeave.employeeId).emit("leave-updated", { leave: updatedLeave, notification });
+    if (req.io) {
+        req.io.to(updatedLeave.employeeId).emit("new-notification", notification);
+    }
+
 
     res.status(200).json({ success: true, message: `Leave ${managerStatus} by Manager`, leave: updatedLeave });
 });
@@ -323,7 +326,7 @@ export const createTask = asyncHandler(async (req, res, next) => {
     });
 
     // Notify the assignee
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
         data: {
             userId: assigneeId,
             title: "New Task Assigned",
@@ -333,8 +336,9 @@ export const createTask = asyncHandler(async (req, res, next) => {
     });
 
     if (req.io) {
-        req.io.to(assigneeId).emit("task-assigned", { task });
+        req.io.to(assigneeId).emit("new-notification", notification);
     }
+
 
     res.status(201).json({ success: true, message: "Task created successfully", task });
 });
