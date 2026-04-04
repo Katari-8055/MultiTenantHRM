@@ -1,19 +1,25 @@
-import { useEffect, useContext } from 'react';
+import { useEffect, useContext, useRef } from 'react';
 import { GlobleContext } from '../context/GlobleContext';
 
 export const useRealTimeSync = (entities, fetchFunction) => {
   const { socket } = useContext(GlobleContext);
+  const fetchRef = useRef(fetchFunction);
+
+  // Keep the latest fetch reference updated without re-triggering the socket setup
+  useEffect(() => {
+    fetchRef.current = fetchFunction;
+  }, [fetchFunction]);
+
+  // Use a stable stringified dependency for arrays to prevent infinite churn
+  const entitiesString = JSON.stringify(Array.isArray(entities) ? entities : [entities]);
 
   useEffect(() => {
-    if (!socket || !fetchFunction) return;
-
-    const entityArray = Array.isArray(entities) ? entities : [entities];
+    if (!socket) return;
 
     const handleRefresh = (data) => {
-      // data.type will be something like 'departments', 'projects', 'stats'
+      const entityArray = JSON.parse(entitiesString);
       if (data && data.type && entityArray.includes(data.type)) {
-         // console.log(`🔄 Real-time sync triggered for: ${data.type}`);
-         fetchFunction();
+         if (fetchRef.current) fetchRef.current();
       }
     };
 
@@ -22,5 +28,5 @@ export const useRealTimeSync = (entities, fetchFunction) => {
     return () => {
       socket.off("refresh-data", handleRefresh);
     };
-  }, [socket, entities, fetchFunction]);
+  }, [socket, entitiesString]); // Dependencies remain completely stable!
 };
