@@ -8,6 +8,26 @@ if (env === 'production' && !process.env.JWT_SECRET) {
     throw new Error('FATAL: JWT_SECRET environment variable is missing in production!');
 }
 
+const getDatabaseUrl = () => {
+    let rawUrl = process.env.DATABASE_URL;
+    if (!rawUrl) return rawUrl;
+
+    try {
+        const urlObj = new URL(rawUrl);
+        if (!urlObj.searchParams.has('connection_limit')) {
+            const limit = process.env.DB_CONNECTION_LIMIT || (env === 'production' ? '15' : '10');
+            urlObj.searchParams.set('connection_limit', limit);
+        }
+        if (!urlObj.searchParams.has('pool_timeout')) {
+            const timeout = process.env.DB_POOL_TIMEOUT || '10';
+            urlObj.searchParams.set('pool_timeout', timeout);
+        }
+        return urlObj.toString();
+    } catch (e) {
+        return rawUrl;
+    }
+};
+
 const config = {
     env,
     port: process.env.PORT || 3000,
@@ -16,7 +36,9 @@ const config = {
         expiresIn: '1d',
     },
     db: {
-        url: process.env.DATABASE_URL,
+        url: getDatabaseUrl(),
+        connectionLimit: process.env.DB_CONNECTION_LIMIT || (env === 'production' ? 15 : 10),
+        poolTimeout: process.env.DB_POOL_TIMEOUT || 10,
     },
     email: {
         user: process.env.EMAIL_USER,
