@@ -64,7 +64,7 @@ export const login = asyncHandler(async (req, res, next) => {
 
   const { password: _tp, ...safeTenant } = tenant;
 
-  res.json({ message: "Login successful", role: tenant.role, tenant: safeTenant, token });
+  res.json({ message: "Login successful", role: tenant.role, tenant: safeTenant });
 })
 
 
@@ -203,7 +203,7 @@ export const employeeLogin = asyncHandler(async (req, res, next) => {
 
   const { password: _p, setupToken: _st, setupTokenExpiry: _ste, ...safeEmployee } = employee;
 
-  res.json({ message: "Login successful", role: employee.role, employee: safeEmployee, token });
+  res.json({ message: "Login successful", role: employee.role, employee: safeEmployee });
 })
 
 //-----------------------------------------Get ME-----------------------------------//
