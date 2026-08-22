@@ -40,6 +40,12 @@ const config = {
         connectionLimit: process.env.DB_CONNECTION_LIMIT || (env === 'production' ? 15 : 10),
         poolTimeout: process.env.DB_POOL_TIMEOUT || 10,
     },
+    redis: {
+        url: process.env.REDIS_URL,
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : undefined,
+        password: process.env.REDIS_PASSWORD,
+    },
     email: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,

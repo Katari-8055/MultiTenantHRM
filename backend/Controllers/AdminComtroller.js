@@ -386,6 +386,7 @@ export const updateEmployee = asyncHandler(async (req, res, next) => {
 
   if (req.io) {
       req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
+      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
 
   res.status(200).json({

@@ -40,6 +40,10 @@ export const markNotificationRead = asyncHandler(async (req, res, next) => {
         data: { read: true }
     });
 
+    if (req.io && employeeId) {
+        req.io.to(employeeId).emit("refresh-data", { type: 'notifications' });
+    }
+
     res.status(200).json({ success: true, notification: updatedNotification });
 });
 
@@ -51,6 +55,10 @@ export const markAllNotificationsRead = asyncHandler(async (req, res, next) => {
         where: { userId: employeeId, read: false },
         data: { read: true }
     });
+
+    if (req.io && employeeId) {
+        req.io.to(employeeId).emit("refresh-data", { type: 'notifications' });
+    }
 
     res.status(200).json({ success: true, message: "All notifications marked as read" });
 });
@@ -76,6 +84,10 @@ export const deleteNotification = asyncHandler(async (req, res, next) => {
         where: { id }
     });
 
+    if (req.io && userId) {
+        req.io.to(userId).emit("refresh-data", { type: 'notifications' });
+    }
+
     res.status(200).json({ success: true, message: "Notification deleted" });
 });
 
@@ -87,6 +99,10 @@ export const clearAllNotifications = asyncHandler(async (req, res, next) => {
     await prisma.notification.deleteMany({
         where: { userId: userId }
     });
+
+    if (req.io && userId) {
+        req.io.to(userId).emit("refresh-data", { type: 'notifications' });
+    }
 
     res.status(200).json({ success: true, message: "All notifications cleared" });
 });

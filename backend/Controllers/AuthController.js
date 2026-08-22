@@ -132,6 +132,11 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
     `Hello ${newEmployee.firstName},\n\nYour account has been created under the ${departmentRecord.name} department.\nPlease set your password using the link below:\n\n${link}\n\nThis link will expire in 24 hours.`
   );
 
+  if (req.io) {
+    req.io.to(`tenant_${tenant.id}`).emit("refresh-data", { type: 'employees' });
+    req.io.to(`tenant_${tenant.id}`).emit("refresh-data", { type: 'stats' });
+  }
+
   const { password: _p, setupToken: _st, setupTokenExpiry: _ste, ...safeEmployee } = newEmployee;
 
   return res.json({
@@ -308,6 +313,11 @@ export const registerEmployeesBulk = asyncHandler(async (req, res, next) => {
     skipDuplicates: true, // avoid error on duplicate email
   });
 
+  if (req.io) {
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+  }
+
   return res.status(201).json({
     success: true,
     message: "Employees added successfully",
@@ -382,6 +392,11 @@ export const updateMe = asyncHandler(async (req, res) => {
         }
       }
     });
+  }
+
+  if (req.io && tenantId) {
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
 
   res.json({ success: true, message: "Profile updated successfully", user: updatedUser });
