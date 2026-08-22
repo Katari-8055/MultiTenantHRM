@@ -9,9 +9,6 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
 
-import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient } from 'redis';
-
 import router from './routes/AuthRoute.js';
 import router1 from './routes/AdminRoute.js';
 import notificationRouter from './routes/NotificationRoute.js';
@@ -19,6 +16,7 @@ import notificationRouter from './routes/NotificationRoute.js';
 import { SocketAuth } from './middlewares/SocketAuth.js';
 import errorMiddleware from './middlewares/errorMiddleware.js';
 import config from './config/config.js';
+import { initRedisAdapter, closeRedisClients } from './config/redis.js';
 
 const PORT = config.port;
 const app = express();
@@ -126,41 +124,8 @@ io.on('connection', (socket) => {
 /* ======================
    SERVER START & GRACEFUL SHUTDOWN
 ====================== */
-let pubClient = null;
-let subClient = null;
-
 const startServer = async () => {
-  const isRedisConfigured = Boolean(config.redis && (config.redis.url || config.redis.host));
-
-  if (isRedisConfigured) {
-    try {
-      const redisOptions = config.redis.url
-        ? { url: config.redis.url }
-        : {
-            socket: {
-              host: config.redis.host,
-              port: config.redis.port || 6379,
-            },
-            ...(config.redis.password && { password: config.redis.password }),
-          };
-
-      pubClient = createClient(redisOptions);
-      subClient = pubClient.duplicate();
-
-      pubClient.on('error', (err) => console.error('❌ Redis Pub Client Error:', err.message));
-      subClient.on('error', (err) => console.error('❌ Redis Sub Client Error:', err.message));
-
-      await Promise.all([pubClient.connect(), subClient.connect()]);
-      io.adapter(createAdapter(pubClient, subClient));
-      console.log('⚡ Redis Adapter initialized successfully for Socket.IO multi-replica scaling!');
-    } catch (error) {
-      console.error('❌ Failed to initialize Redis Adapter for Socket.IO:', error.message);
-      console.log('⚠️  Falling back to default in-memory Socket.IO adapter.');
-    }
-  } else {
-    console.log('ℹ️  Redis is not configured. Socket.IO running in single-node (in-memory) mode.');
-    console.log('💡 Required environment variables for multi-replica Socket.IO scaling: REDIS_URL or (REDIS_HOST, REDIS_PORT, REDIS_PASSWORD).');
-  }
+  await initRedisAdapter(io);
 
   server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT} in ${config.env} mode`);
@@ -173,14 +138,7 @@ const gracefulShutdown = async () => {
   console.log('Closing HTTP server and Socket.IO connections...');
   server.close(async () => {
     console.log('HTTP server closed');
-    if (pubClient && subClient) {
-      try {
-        await Promise.all([pubClient.quit(), subClient.quit()]);
-        console.log('Redis pub/sub clients disconnected');
-      } catch (err) {
-        console.error('Error closing Redis clients:', err.message);
-      }
-    }
+    await closeRedisClients();
     process.exit(0);
   });
 };
@@ -195,4 +153,5 @@ process.on('SIGINT', () => {
   console.log('SIGINT signal received');
   gracefulShutdown();
 });
+
 
