@@ -69,8 +69,25 @@ export const getEmployee = asyncHandler(async (req, res, next) => {
     },
     include: {
       employees: {
-        include: {
-          department: true, 
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          dateOfBirth: true,
+          gender: true,
+          position: true,
+          salary: true,
+          dateOfJoining: true,
+          employmentType: true,
+          status: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          tenantId: true,
+          departmentId: true,
+          department: true,
         },
       },
     },
@@ -252,8 +269,25 @@ export const getEmployeeById = asyncHandler(async (req, res, next) => {
       id,
       tenantId 
     },
-    include: {
-      department: true
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      dateOfBirth: true,
+      gender: true,
+      position: true,
+      salary: true,
+      dateOfJoining: true,
+      employmentType: true,
+      status: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+      tenantId: true,
+      departmentId: true,
+      department: true,
     }
   });
 
@@ -312,8 +346,25 @@ export const updateEmployee = asyncHandler(async (req, res, next) => {
       status: status || undefined,
       departmentId: departmentId || undefined
     },
-    include: {
-      department: true
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      dateOfBirth: true,
+      gender: true,
+      position: true,
+      salary: true,
+      dateOfJoining: true,
+      employmentType: true,
+      status: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+      tenantId: true,
+      departmentId: true,
+      department: true,
     }
   });
 

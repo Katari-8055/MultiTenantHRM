@@ -32,7 +32,9 @@ export const register = asyncHandler(async (req, res, next) => {
     }
   });
 
-  res.status(201).json({ message: "Tenant registered successfully", tenant: newTenant });
+  const { password: _p, ...safeTenant } = newTenant;
+
+  res.status(201).json({ message: "Tenant registered successfully", tenant: safeTenant });
 });
 
 
@@ -60,7 +62,9 @@ export const login = asyncHandler(async (req, res, next) => {
     maxAge: 24 * 60 * 60 * 1000
   });
 
-  res.json({ message: "Login successful", role: tenant.role, tenant, token });
+  const { password: _tp, ...safeTenant } = tenant;
+
+  res.json({ message: "Login successful", role: tenant.role, tenant: safeTenant, token });
 })
 
 
@@ -128,10 +132,12 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
     `Hello ${newEmployee.firstName},\n\nYour account has been created under the ${departmentRecord.name} department.\nPlease set your password using the link below:\n\n${link}\n\nThis link will expire in 24 hours.`
   );
 
+  const { password: _p, setupToken: _st, setupTokenExpiry: _ste, ...safeEmployee } = newEmployee;
+
   return res.json({
     success: true,
     message: "Employee added successfully and verification link sent.",
-    employee: newEmployee,
+    employee: safeEmployee,
   });
 
 });
@@ -195,7 +201,9 @@ export const employeeLogin = asyncHandler(async (req, res, next) => {
     maxAge: 24 * 60 * 60 * 1000
   })
 
-  res.json({ message: "Login successful", role: employee.role, employee, token });
+  const { password: _p, setupToken: _st, setupTokenExpiry: _ste, ...safeEmployee } = employee;
+
+  res.json({ message: "Login successful", role: employee.role, employee: safeEmployee, token });
 })
 
 //-----------------------------------------Get ME-----------------------------------//

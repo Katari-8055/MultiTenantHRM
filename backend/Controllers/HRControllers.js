@@ -72,7 +72,16 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
       decisionAt: new Date(),
     },
     include: {
-      employee: true,
+      employee: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          department: { select: { name: true } }
+        }
+      },
     },
   });
 
