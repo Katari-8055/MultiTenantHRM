@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2, ClipboardCheck, Calendar, Crown } from "lucide-react";
-import axios from "axios";
+import api from "../../utils/api";
 import { GlobleContext } from "../../context/GlobleContext";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync";
-
-const API = "http://localhost:3000/api/admin";
 
 const TABS = ["ALL", "PENDING", "APPROVED", "REJECTED"];
 
@@ -33,7 +31,7 @@ export default function HRLeaveManagement() {
 
   const fetchLeaves = async () => {
     try {
-      const { data } = await axios.get(`${API}/getHRLeave`, { withCredentials: true });
+      const { data } = await api.get("/api/admin/getHRLeave");
       setLeaves(data.leave || []);
     } catch (err) {
       console.error("Error fetching HR leaves:", err);
@@ -58,10 +56,9 @@ export default function HRLeaveManagement() {
   const handleDecision = async (leaveId, hrStatus) => {
     setUpdating(leaveId);
     try {
-      const { data } = await axios.post(
-        `${API}/updateLeaveStatus`,
-        { leaveId, hrStatus },
-        { withCredentials: true }
+      const { data } = await api.post(
+        "/api/admin/updateLeaveStatus",
+        { leaveId, hrStatus }
       );
       setLeaves(prev =>
         prev.map(l => l.id === leaveId ? { ...l, hrStatus, status: data.leave.status } : l)

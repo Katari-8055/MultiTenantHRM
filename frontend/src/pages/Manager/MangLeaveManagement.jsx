@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/api.js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, ClipboardList, Calendar, CheckCircle2,
@@ -7,8 +7,7 @@ import {
 } from "lucide-react";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
-
-const API = "http://localhost:3000/api/admin";
+import { tabSwitchTransition, SPRING_SMOOTH, hoverScale } from "../../utils/motion.js";
 
 const STATUS_CONFIG = {
   PENDING:  { label: "Pending",  color: "amber",   bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-400"  },
@@ -27,7 +26,7 @@ export default function MangLeaveManagement() {
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchLeaves = async () => {
     try {
-      const { data } = await axios.get(`${API}/manager-leaves`, { withCredentials: true });
+      const { data } = await api.get("/api/admin/manager-leaves");
       setLeaves(data.leaves || []);
     } catch (err) {
       console.error("Error fetching manager leaves:", err);
@@ -50,10 +49,9 @@ export default function MangLeaveManagement() {
   const handleDecision = async (leaveId, managerStatus) => {
     setUpdating(leaveId);
     try {
-      const { data } = await axios.put(
-        `${API}/manager-leave-status`,
-        { leaveId, managerStatus },
-        { withCredentials: true }
+      const { data } = await api.put(
+        "/api/admin/manager-leave-status",
+        { leaveId, managerStatus }
       );
       // Optimistic update
       setLeaves(prev =>
@@ -106,7 +104,7 @@ export default function MangLeaveManagement() {
                 layoutId="mangLeaveTab"
                 className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-100"
                 initial={false}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                transition={tabSwitchTransition}
               />
             )}
             <span className="relative z-10 flex items-center gap-1.5">
@@ -169,7 +167,8 @@ const LeaveCard = ({ leave, index, updating, onDecision }) => {
       initial={{ opacity: 0, y: 24, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.35, delay: index * 0.05 }}
+      transition={{ ...SPRING_SMOOTH, delay: Math.min(index * 0.04, 0.2) }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className={`bg-white rounded-[24px] border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group ${
         isPending ? "border-slate-100 hover:border-indigo-100" : `${cfg.border} ${cfg.bg}/20`
       }`}

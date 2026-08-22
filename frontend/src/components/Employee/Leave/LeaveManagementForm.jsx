@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 
 export default function LeaveManagementForm({ closeForm, onSuccess, onCreateLeave }) {
   const [formData, setFormData] = useState({
@@ -42,10 +42,9 @@ export default function LeaveManagementForm({ closeForm, onSuccess, onCreateLeav
 
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/admin/applyLeave",
-        formData,
-        { withCredentials: true }
+      const res = await api.post(
+        "/api/admin/applyLeave",
+        formData
       );
 
       onCreateLeave(res.data.leave);

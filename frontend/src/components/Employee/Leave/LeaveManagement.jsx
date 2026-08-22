@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from "../../../utils/api";
 import { CalendarDays, PlusCircle, Loader2, FileText, CheckCircle2, XCircle, Clock, Crown, User2 } from "lucide-react";
 import LeaveManagementForm from "./LeaveManagementForm";
 import { GlobleContext } from "../../../context/GlobleContext";
@@ -74,7 +74,7 @@ export default function LeaveManagement() {
 
   const fetchLeaves = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/getLeaves", { withCredentials: true });
+      const res = await api.get("/api/admin/getLeaves");
       setLeaves(res.data.leaves || []);
     } catch (err) {
       console.error("Error fetching leaves:", err);
