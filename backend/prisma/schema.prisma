@@ -94,6 +94,9 @@ model Employee {
 
   // Notifications
   notifications      Notification[]
+
+  @@index([tenantId])
+  @@index([setupToken])
 }
 
 
@@ -123,6 +126,8 @@ model Project {
 
   // Manager relation → MULTIPLE PROJECT SUPPORT
   manager     Employee @relation("ProjectManagerEmployee", fields: [managerId], references: [id])
+
+  @@index([tenantId, managerId])
 }
 
 
@@ -139,6 +144,8 @@ model Department {
 
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   employees Employee[]
+
+  @@index([tenantId])
 }
 
 
@@ -173,6 +180,10 @@ model Leave {
 
   manager       Employee?   @relation("LeaveManager", fields: [managerId], references: [id])
   hr            Employee?   @relation("LeaveHR", fields: [hrId], references: [id])
+
+  @@index([tenantId, managerId])
+  @@index([tenantId, status])
+  @@index([tenantId, employeeId])
 }
 
 
@@ -197,6 +208,9 @@ model Task {
   tenant        Tenant    @relation(fields: [tenantId], references: [id])
   assignee      Employee  @relation("TaskAssignee", fields: [assigneeId], references: [id])
   creator       Employee  @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  @@index([tenantId, assigneeId])
+  @@index([tenantId, creatorId])
 }
 
 
@@ -214,6 +228,8 @@ model Notification {
   createdAt DateTime @default(now())
 
   user      Employee @relation(fields: [userId], references: [id])
+
+  @@index([userId, read])
 }
 
 

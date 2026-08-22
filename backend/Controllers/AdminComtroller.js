@@ -63,31 +63,32 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
 export const getEmployee = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
 
-  const employee = await prisma.tenant.findUnique({
+  const employees = await prisma.employee.findMany({
     where: {
-      id: tenantId,
+      tenantId,
     },
-    include: {
-      employees: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      dateOfBirth: true,
+      gender: true,
+      position: true,
+      salary: true,
+      dateOfJoining: true,
+      employmentType: true,
+      status: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+      tenantId: true,
+      departmentId: true,
+      department: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          phone: true,
-          dateOfBirth: true,
-          gender: true,
-          position: true,
-          salary: true,
-          dateOfJoining: true,
-          employmentType: true,
-          status: true,
-          role: true,
-          createdAt: true,
-          updatedAt: true,
-          tenantId: true,
-          departmentId: true,
-          department: true,
+          name: true,
         },
       },
     },
@@ -95,7 +96,7 @@ export const getEmployee = asyncHandler(async (req, res, next) => {
 
   res.json({
     success: true,
-    employees: employee?.employees ?? [],
+    employees,
   });
 });
 
@@ -206,44 +207,49 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
 export const getDashboardStats = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
 
-  // Counts
-  const employeeCount = await prisma.employee.count({ where: { tenantId } });
-  const departmentCount = await prisma.department.count({ where: { tenantId } });
-  const projectCount = await prisma.project.count({ where: { tenantId } });
-  const pendingLeaveCount = await prisma.leave.count({ 
-      where: { 
-          tenantId,
-          status: 'PENDING'
-      } 
-  });
-
-  // Department distribution for charts
-  const departmentStats = await prisma.department.findMany({
+  // Execute all independent dashboard queries concurrently
+  const [
+    employeeCount,
+    departmentCount,
+    projectCount,
+    pendingLeaveCount,
+    departmentStats,
+    recentEmployees
+  ] = await Promise.all([
+    prisma.employee.count({ where: { tenantId } }),
+    prisma.department.count({ where: { tenantId } }),
+    prisma.project.count({ where: { tenantId } }),
+    prisma.leave.count({
+      where: {
+        tenantId,
+        status: 'PENDING'
+      }
+    }),
+    prisma.department.findMany({
       where: { tenantId },
       include: {
-          _count: {
-              select: { employees: true }
-          }
+        _count: {
+          select: { employees: true }
+        }
       }
-  });
+    }),
+    prisma.employee.findMany({
+      where: { tenantId },
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        firstName: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    })
+  ]);
 
   const chartData = departmentStats.map(dept => ({
       name: dept.name,
       value: dept._count.employees
   }));
-
-  // Recent Employees (Activity)
-  const recentEmployees = await prisma.employee.findMany({
-      where: { tenantId },
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-          firstName: true,
-          email: true,
-          role: true,
-          createdAt: true
-      }
-  });
 
   res.status(200).json({
       success: true,

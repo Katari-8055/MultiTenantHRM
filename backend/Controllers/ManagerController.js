@@ -87,38 +87,52 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
 
-    // 1. Total Projects Managed
-    const totalProjects = await prisma.project.count({
-        where: { tenantId, managerId: employeeId }
-    });
-
-    // 2. Completed Projects
-    const completedProjects = await prisma.project.count({
-        where: { tenantId, managerId: employeeId, status: 'COMPLETED' }
-    });
-
-    // 3. Unique Team Members
-    const projectsWithMembers = await prisma.project.findMany({
-        where: { tenantId, managerId: employeeId },
-        select: { members: { select: { id: true } } }
-    });
-    const uniqueMemberIds = new Set();
-    projectsWithMembers.forEach(proj => {
-        proj.members.forEach(member => uniqueMemberIds.add(member.id));
-    });
-    const teamMembersCount = uniqueMemberIds.size;
-
-    // 4. Pending Leave Requests (where managerStatus is PENDING)
-    const pendingLeaves = await prisma.leave.count({
-        where: { tenantId, managerId: employeeId, managerStatus: 'PENDING' }
-    });
-
-    // 5. Chart Data (Projects grouped by Status)
-    const projectStatusCounts = await prisma.project.groupBy({
-        by: ['status'],
-        where: { tenantId, managerId: employeeId },
-        _count: { status: true }
-    });
+    // Execute all independent queries concurrently
+    const [
+        totalProjects,
+        completedProjects,
+        teamMembersCount,
+        pendingLeaves,
+        projectStatusCounts,
+        recentLeaves
+    ] = await Promise.all([
+        prisma.project.count({
+            where: { tenantId, managerId: employeeId }
+        }),
+        prisma.project.count({
+            where: { tenantId, managerId: employeeId, status: 'COMPLETED' }
+        }),
+        prisma.employee.count({
+            where: {
+                tenantId,
+                projects: {
+                    some: { managerId: employeeId }
+                }
+            }
+        }),
+        prisma.leave.count({
+            where: { tenantId, managerId: employeeId, managerStatus: 'PENDING' }
+        }),
+        prisma.project.groupBy({
+            by: ['status'],
+            where: { tenantId, managerId: employeeId },
+            _count: { status: true }
+        }),
+        prisma.leave.findMany({
+            where: { tenantId, managerId: employeeId },
+            take: 5,
+            orderBy: { appliedAt: 'desc' },
+            include: {
+                employee: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                }
+            }
+        })
+    ]);
 
     let projectChartData = [];
     if (projectStatusCounts.length > 0) {
@@ -134,22 +148,6 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
             { name: "CANCELLED", value: 0 }
         ];
     }
-
-    // 6. Recent Leave Requests Feed
-    const recentLeaves = await prisma.leave.findMany({
-        where: { tenantId, managerId: employeeId },
-        take: 5,
-        orderBy: { appliedAt: 'desc' },
-        include: {
-            employee: {
-                select: {
-                    firstName: true,
-                    lastName: true,
-                    email: true
-                }
-            }
-        }
-    });
 
     const recentLeavesFormatted = recentLeaves.map(leave => ({
         id: leave.id,

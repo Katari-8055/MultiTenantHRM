@@ -133,30 +133,52 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
 export const getHrDashboardStats = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
 
-  // Counts
-  const employeeCount = await prisma.employee.count({ where: { tenantId } });
-  const departmentCount = await prisma.department.count({ where: { tenantId } });
-  const pendingLeaveCount = await prisma.leave.count({
-    where: {
-      tenantId,
-      status: 'PENDING'
-    }
-  });
-  const approvedLeaveCount = await prisma.leave.count({
-    where: {
-      tenantId,
-      status: 'APPROVED'
-    }
-  });
-
-  // Chart Data (Leaves grouped by status)
-  const leavesStatusCounts = await prisma.leave.groupBy({
-    by: ['status'],
-    where: { tenantId },
-    _count: {
-      status: true
-    }
-  });
+  // Execute all independent queries concurrently
+  const [
+    employeeCount,
+    departmentCount,
+    pendingLeaveCount,
+    approvedLeaveCount,
+    leavesStatusCounts,
+    recentLeaves
+  ] = await Promise.all([
+    prisma.employee.count({ where: { tenantId } }),
+    prisma.department.count({ where: { tenantId } }),
+    prisma.leave.count({
+      where: {
+        tenantId,
+        status: 'PENDING'
+      }
+    }),
+    prisma.leave.count({
+      where: {
+        tenantId,
+        status: 'APPROVED'
+      }
+    }),
+    prisma.leave.groupBy({
+      by: ['status'],
+      where: { tenantId },
+      _count: {
+        status: true
+      }
+    }),
+    prisma.leave.findMany({
+      where: { tenantId },
+      take: 5,
+      orderBy: { appliedAt: 'desc' },
+      include: {
+        employee: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true
+          }
+        }
+      }
+    })
+  ]);
 
   let chartData = [];
   if (leavesStatusCounts.length > 0) {
@@ -171,23 +193,6 @@ export const getHrDashboardStats = asyncHandler(async (req, res, next) => {
       { name: "REJECTED", value: 0 },
     ];
   }
-
-  // Recent Leave Requests
-  const recentLeaves = await prisma.leave.findMany({
-    where: { tenantId },
-    take: 5,
-    orderBy: { appliedAt: 'desc' },
-    include: {
-      employee: {
-        select: {
-          firstName: true,
-          lastName: true,
-          email: true,
-          role: true
-        }
-      }
-    }
-  });
 
   const recentActivity = recentLeaves.map(leave => ({
     id: leave.id,

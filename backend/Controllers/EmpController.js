@@ -248,56 +248,58 @@ export const getEmpDashboardStats = asyncHandler(async (req, res, next) => {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
 
-    // Counts
-    const taskCount = await prisma.task.count({
-        where: {
-            tenantId,
-            assigneeId: employeeId,
-            status: { in: ['TODO', 'IN_PROGRESS'] }
-        }
-    });
-
-    const projectCount = await prisma.project.count({
-        where: {
-            tenantId,
-            members: { some: { id: employeeId } }
-        }
-    });
-
-    const leaveStats = await prisma.leave.findMany({
-        where: { tenantId, employeeId },
-        select: { status: true }
-    });
-
-    const pendingLeaves = leaveStats.filter(l => l.status === 'PENDING').length;
-    const approvedLeaves = leaveStats.filter(l => l.status === 'APPROVED').length;
-
-    // Recent Tasks
-    const recentTasks = await prisma.task.findMany({
-        where: { tenantId, assigneeId: employeeId },
-        take: 5,
-        orderBy: { updatedAt: 'desc' },
-        include: {
-            creator: {
-                select: { firstName: true, lastName: true }
+    // Execute all independent dashboard queries concurrently
+    const [
+        taskCount,
+        projectCount,
+        pendingLeaves,
+        approvedLeaves,
+        recentTasks,
+        activeProjects
+    ] = await Promise.all([
+        prisma.task.count({
+            where: {
+                tenantId,
+                assigneeId: employeeId,
+                status: { in: ['TODO', 'IN_PROGRESS'] }
             }
-        }
-    });
-
-    // Active Projects
-    const activeProjects = await prisma.project.findMany({
-        where: {
-            tenantId,
-            members: { some: { id: employeeId } },
-            status: 'ONGOING'
-        },
-        take: 3,
-        include: {
-            manager: {
-                select: { firstName: true, lastName: true }
+        }),
+        prisma.project.count({
+            where: {
+                tenantId,
+                members: { some: { id: employeeId } }
             }
-        }
-    });
+        }),
+        prisma.leave.count({
+            where: { tenantId, employeeId, status: 'PENDING' }
+        }),
+        prisma.leave.count({
+            where: { tenantId, employeeId, status: 'APPROVED' }
+        }),
+        prisma.task.findMany({
+            where: { tenantId, assigneeId: employeeId },
+            take: 5,
+            orderBy: { updatedAt: 'desc' },
+            include: {
+                creator: {
+                    select: { firstName: true, lastName: true }
+                }
+            }
+        }),
+        prisma.project.findMany({
+            where: {
+                tenantId,
+                members: { some: { id: employeeId } },
+                status: 'ONGOING'
+            },
+            take: 3,
+            include: {
+                manager: {
+                    select: { firstName: true, lastName: true }
+                }
+            }
+        })
+    ]);
 
     res.status(200).json({
         success: true,
