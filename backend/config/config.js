@@ -1,13 +1,18 @@
 import dotenv from 'dotenv';
-import path from 'path';
 
 dotenv.config();
 
+const env = process.env.NODE_ENV || 'development';
+
+if (env === 'production' && !process.env.JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is missing in production!');
+}
+
 const config = {
-    env: process.env.NODE_ENV || 'development',
+    env,
     port: process.env.PORT || 3000,
     jwt: {
-        secret: process.env.JWT_SECRET || 'fallback-secret-for-dev-only',
+        secret: process.env.JWT_SECRET || (env === 'production' ? undefined : 'fallback-secret-for-dev-only'),
         expiresIn: '1d',
     },
     db: {
@@ -22,7 +27,7 @@ const config = {
 
 // Simple validation to ensure essential variables are present in production
 if (config.env === 'production') {
-    const essential = ['DATABASE_URL', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASSWORD'];
+    const essential = ['DATABASE_URL', 'EMAIL_USER', 'EMAIL_PASSWORD'];
     essential.forEach((key) => {
         if (!process.env[key]) {
             console.warn(`CRITICAL: Environment variable ${key} is missing in production!`);
@@ -31,3 +36,4 @@ if (config.env === 'production') {
 }
 
 export default config;
+
