@@ -57,42 +57,63 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "hrStatus must be APPROVED or REJECTED" });
   }
 
+  const existingLeave = await prisma.leave.findFirst({
+    where: { id: leaveId, tenantId }
+  });
+
+  if (!existingLeave) {
+    return res.status(404).json({ message: "Leave not found or unauthorized" });
+  }
+
+  // Prevent already-finalized leaves from being overwritten
+  if (existingLeave.hrStatus !== 'PENDING' || existingLeave.status !== 'PENDING') {
+    return res.status(400).json({ message: "Leave request has already been finalized" });
+  }
+
+  // HR can only process leaves that are manager APPROVED or have no manager assigned
+  if (existingLeave.managerId !== null && existingLeave.managerStatus !== 'APPROVED') {
+    return res.status(400).json({ message: "HR can only process leave requests approved by the manager" });
+  }
+
   // HR decision is FINAL — it sets global status
   const globalStatus = hrStatus === 'APPROVED' ? 'APPROVED' : 'REJECTED';
 
-  const leave = await prisma.leave.update({
-    where: {
-      id: leaveId,
-      tenantId,
-    },
-    data: {
-      hrStatus,
-      hrId: employeeId,
-      status: globalStatus,
-      decisionAt: new Date(),
-    },
-    include: {
-      employee: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          role: true,
-          department: { select: { name: true } }
-        }
+  const { leave, notification } = await prisma.$transaction(async (tx) => {
+    const updatedLeave = await tx.leave.update({
+      where: {
+        id: leaveId,
+        tenantId,
       },
-    },
-  });
+      data: {
+        hrStatus,
+        hrId: employeeId,
+        status: globalStatus,
+        decisionAt: new Date(),
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            department: { select: { name: true } }
+          }
+        },
+      },
+    });
 
-  // 🔔 CREATE NOTIFICATION
-  const notification = await prisma.notification.create({
-    data: {
-      userId: leave.employeeId,
-      title: "Leave Decision Finalized",
-      message: `Your leave has been ${globalStatus === 'APPROVED' ? 'fully APPROVED by HR.' : 'REJECTED by HR.'}`,
-      type: "LEAVE",
-    },
+    const newNotification = await tx.notification.create({
+      data: {
+        userId: updatedLeave.employeeId,
+        title: "Leave Decision Finalized",
+        message: `Your leave has been ${globalStatus === 'APPROVED' ? 'fully APPROVED by HR.' : 'REJECTED by HR.'}`,
+        type: "LEAVE",
+      },
+    });
+
+    return { leave: updatedLeave, notification: newNotification };
   });
 
   // ⚡ Emit real-time event

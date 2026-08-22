@@ -65,38 +65,42 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
 
     const resolvedManagerId = project?.managerId || null;
 
-    const newLeave = await prisma.leave.create({
-        data: {
-            tenantId,
-            employeeId,
-            managerId: resolvedManagerId,
-            type,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
-            reason,
-            appliedAt: new Date()
-        },
-        include: {
-            employee: { select: { firstName: true, lastName: true } }
-        }
-    });
-
-    // Notify the manager if there is one
-    if (resolvedManagerId) {
-        const notification = await prisma.notification.create({
+    const { newLeave, notification } = await prisma.$transaction(async (tx) => {
+        const createdLeave = await tx.leave.create({
             data: {
-                userId: resolvedManagerId,
-                title: "New Leave Application",
-                message: `${newLeave.employee.firstName} ${newLeave.employee.lastName || ''} has applied for ${type} leave.`,
-                type: "LEAVE"
+                tenantId,
+                employeeId,
+                managerId: resolvedManagerId,
+                type,
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                reason,
+                appliedAt: new Date()
+            },
+            include: {
+                employee: { select: { firstName: true, lastName: true } }
             }
         });
 
-        if (req.io) {
-            req.io.to(resolvedManagerId).emit("new-notification", notification);
-            req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
-            req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+        let createdNotification = null;
+        if (resolvedManagerId) {
+            createdNotification = await tx.notification.create({
+                data: {
+                    userId: resolvedManagerId,
+                    title: "New Leave Application",
+                    message: `${createdLeave.employee.firstName} ${createdLeave.employee.lastName || ''} has applied for ${type} leave.`,
+                    type: "LEAVE"
+                }
+            });
         }
+
+        return { newLeave: createdLeave, notification: createdNotification };
+    });
+
+    if (resolvedManagerId && req.io) {
+        req.io.to(resolvedManagerId).emit("new-notification", notification);
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
+        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     } else if (req.io) {
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });

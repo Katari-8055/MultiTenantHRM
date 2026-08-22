@@ -222,50 +222,66 @@ export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
         return res.status(400).json({ message: "managerStatus must be APPROVED or REJECTED" });
     }
 
-    // Verify this leave belongs to this manager
-    const existingLeave = await prisma.leave.findFirst({
-        where: { id: leaveId, tenantId, managerId: employeeId }
-    });
-
-    if (!existingLeave) {
-        return res.status(403).json({ message: "Leave not found or unauthorized" });
-    }
-
-    // If Manager REJECTS → global status becomes REJECTED immediately
-    // If Manager APPROVES → pass it to HR (global status remains PENDING)
     const globalStatus = managerStatus === 'REJECTED' ? 'REJECTED' : 'PENDING';
 
-    const updatedLeave = await prisma.leave.update({
-        where: { id: leaveId },
-        data: {
-            managerStatus,
-            status: globalStatus
-        },
-        include: {
-            employee: {
-                select: { firstName: true, lastName: true, email: true }
+    const result = await prisma.$transaction(async (tx) => {
+        // Atomic update with state guard (PENDING)
+        const updateResult = await tx.leave.updateMany({
+            where: {
+                id: leaveId,
+                tenantId,
+                managerId: employeeId,
+                managerStatus: 'PENDING',
+                status: 'PENDING'
+            },
+            data: {
+                managerStatus,
+                status: globalStatus
             }
+        });
+
+        if (updateResult.count === 0) {
+            const checkLeave = await tx.leave.findFirst({
+                where: { id: leaveId, tenantId, managerId: employeeId }
+            });
+            if (!checkLeave) {
+                return { status: 404, message: "Leave not found or unauthorized" };
+            }
+            return { status: 409, message: "Leave request has already been processed" };
         }
+
+        const updatedLeave = await tx.leave.findUnique({
+            where: { id: leaveId },
+            include: {
+                employee: {
+                    select: { firstName: true, lastName: true, email: true }
+                }
+            }
+        });
+
+        const notification = await tx.notification.create({
+            data: {
+                userId: updatedLeave.employeeId,
+                title: "Leave Status Updated",
+                message: `Your leave request has been ${managerStatus === 'APPROVED' ? 'approved by your Manager. Awaiting HR final approval.' : 'rejected by your Manager.'}`,
+                type: "LEAVE"
+            }
+        });
+
+        return { status: 200, updatedLeave, notification };
     });
 
-    // Emit real-time notification to the employee
-    const notification = await prisma.notification.create({
-        data: {
-            userId: updatedLeave.employeeId,
-            title: "Leave Status Updated",
-            message: `Your leave request has been ${managerStatus === 'APPROVED' ? 'approved by your Manager. Awaiting HR final approval.' : 'rejected by your Manager.'}`,
-            type: "LEAVE"
-        }
-    });
+    if (result.status !== 200) {
+        return res.status(result.status).json({ message: result.message });
+    }
 
     if (req.io) {
-        req.io.to(updatedLeave.employeeId).emit("new-notification", notification);
+        req.io.to(result.updatedLeave.employeeId).emit("new-notification", result.notification);
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
 
-
-    res.status(200).json({ success: true, message: `Leave ${managerStatus} by Manager`, leave: updatedLeave });
+    res.status(200).json({ success: true, message: `Leave ${managerStatus} by Manager`, leave: result.updatedLeave });
 });
 
 //-----------------------------------------------------Get Manager Tasks-----------------------------------------------------//
