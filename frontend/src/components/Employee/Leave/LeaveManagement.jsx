@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../utils/api";
 import { CalendarDays, PlusCircle, Loader2, FileText, CheckCircle2, XCircle, Clock, Crown, User2 } from "lucide-react";
 import LeaveManagementForm from "./LeaveManagementForm";
@@ -98,7 +97,7 @@ export default function LeaveManagement() {
     <div className="p-4 md:p-8 space-y-8 bg-slate-50 min-h-screen">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/60 p-6 rounded-3xl border border-white backdrop-blur-xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/60 p-6 rounded-3xl border border-white shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center">
             <FileText className="w-5 h-5" />
@@ -110,7 +109,7 @@ export default function LeaveManagement() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-sm transition-all duration-200 hover:shadow-violet-200 hover:shadow-md"
+          className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-sm transition-all duration-200"
         >
           <PlusCircle className="w-4 h-4" />
           Apply Leave
@@ -123,19 +122,11 @@ export default function LeaveManagement() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`relative px-5 py-2 text-sm font-bold rounded-xl transition-colors duration-300 ${
-              activeTab === tab ? "text-violet-700" : "text-slate-500 hover:text-slate-700"
+            className={`relative px-5 py-2 text-sm font-bold rounded-xl transition-colors duration-200 ${
+              activeTab === tab ? "bg-white text-violet-700 shadow-sm border border-slate-100" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            {activeTab === tab && (
-              <motion.div
-                layoutId="empLeaveTab"
-                className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-100"
-                initial={false}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5">
               {tab}
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                 activeTab === tab ? "bg-violet-100 text-violet-700" : "bg-slate-200 text-slate-500"
@@ -154,18 +145,16 @@ export default function LeaveManagement() {
           <p className="mt-3 font-medium text-slate-500">Fetching your leaves...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 max-w-xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 max-w-xl mx-auto">
           <FileText className="w-10 h-10 text-slate-300 mb-3" />
           <h3 className="text-xl font-bold text-slate-700">No {activeTab === "ALL" ? "" : activeTab.toLowerCase()} leaves</h3>
           <p className="text-slate-500 font-medium mt-1">You haven't submitted any leaves in this category.</p>
-        </motion.div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((leave, index) => (
-              <LeaveCard key={leave.id} leave={leave} index={index} />
-            ))}
-          </AnimatePresence>
+          {filtered.map((leave, index) => (
+            <LeaveCard key={leave.id} leave={leave} index={index} />
+          ))}
         </div>
       )}
 
@@ -196,13 +185,8 @@ const LeaveCard = ({ leave, index }) => {
   ) + 1;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.35, delay: index * 0.05 }}
-      className="bg-white rounded-[24px] border border-slate-100 shadow-sm hover:shadow-xl hover:border-violet-100 transition-all duration-300 overflow-hidden flex flex-col group"
+    <div
+      className="bg-white rounded-[24px] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col group"
     >
       {/* Top accent */}
       <div className={`h-1 w-full ${cfg.dot}`} />
@@ -277,6 +261,6 @@ const LeaveCard = ({ leave, index }) => {
           Applied: {new Date(leave.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };

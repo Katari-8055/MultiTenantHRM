@@ -1,13 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import api from "../../utils/api.js";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, ClipboardList, Calendar, CheckCircle2,
   XCircle, Clock, Filter, ChevronDown
 } from "lucide-react";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
-import { tabSwitchTransition, SPRING_SMOOTH, hoverScale } from "../../utils/motion.js";
 
 const STATUS_CONFIG = {
   PENDING:  { label: "Pending",  color: "amber",   bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-400"  },
@@ -77,7 +75,7 @@ export default function MangLeaveManagement() {
     <div className="p-4 md:p-8 space-y-8 bg-slate-50 min-h-screen">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end gap-4 bg-white/60 p-6 rounded-3xl border border-white backdrop-blur-xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-end gap-4 bg-white/60 p-6 rounded-3xl border border-white shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
             <ClipboardList className="w-5 h-5" />
@@ -95,19 +93,11 @@ export default function MangLeaveManagement() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`relative px-5 py-2 text-sm font-bold rounded-xl transition-colors duration-300 ${
-              activeTab === tab ? "text-indigo-700" : "text-slate-500 hover:text-slate-700"
+            className={`relative px-5 py-2 text-sm font-bold rounded-xl transition-colors duration-200 ${
+              activeTab === tab ? "bg-white text-indigo-700 shadow-sm border border-slate-100" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            {activeTab === tab && (
-              <motion.div
-                layoutId="mangLeaveTab"
-                className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-100"
-                initial={false}
-                transition={tabSwitchTransition}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5">
               {tab}
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                 activeTab === tab ? "bg-indigo-100 text-indigo-700" : "bg-slate-200 text-slate-500"
@@ -129,17 +119,15 @@ export default function MangLeaveManagement() {
         <EmptyState tab={activeTab} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((leave, index) => (
-              <LeaveCard
-                key={leave.id}
-                leave={leave}
-                index={index}
-                updating={updating}
-                onDecision={handleDecision}
-              />
-            ))}
-          </AnimatePresence>
+          {filtered.map((leave, index) => (
+            <LeaveCard
+              key={leave.id}
+              leave={leave}
+              index={index}
+              updating={updating}
+              onDecision={handleDecision}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -162,14 +150,8 @@ const LeaveCard = ({ leave, index, updating, onDecision }) => {
   ) + 1;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ ...SPRING_SMOOTH, delay: Math.min(index * 0.04, 0.2) }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className={`bg-white rounded-[24px] border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group ${
+    <div
+      className={`bg-white rounded-[24px] border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col group ${
         isPending ? "border-slate-100 hover:border-indigo-100" : `${cfg.border} ${cfg.bg}/20`
       }`}
     >
@@ -222,7 +204,7 @@ const LeaveCard = ({ leave, index, updating, onDecision }) => {
             <button
               disabled={isUpdating}
               onClick={() => onDecision(leave.id, "APPROVED")}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-emerald-200 hover:shadow-md"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all duration-200 disabled:opacity-50 shadow-sm"
             >
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               Approve
@@ -243,7 +225,7 @@ const LeaveCard = ({ leave, index, updating, onDecision }) => {
           Applied: {new Date(leave.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -257,15 +239,11 @@ const InfoPill = ({ icon, label, value }) => (
 );
 
 const EmptyState = ({ tab }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 max-w-xl mx-auto"
-  >
+  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 max-w-xl mx-auto">
     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
       <ClipboardList className="w-8 h-8 text-slate-300" />
     </div>
     <h3 className="text-xl font-bold text-slate-700">No {tab === "ALL" ? "" : tab.toLowerCase()} leaves</h3>
     <p className="text-slate-500 font-medium mt-1">Your team has no matching leave requests.</p>
-  </motion.div>
+  </div>
 );

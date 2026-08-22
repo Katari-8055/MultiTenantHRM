@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2, ClipboardCheck, Calendar, Crown } from "lucide-react";
 import api from "../../utils/api";
 import { GlobleContext } from "../../context/GlobleContext";
@@ -74,7 +73,7 @@ export default function HRLeaveManagement() {
     <div className="p-4 md:p-8 space-y-8 bg-slate-50 min-h-screen">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white/60 p-6 rounded-3xl border border-white backdrop-blur-xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white/60 p-6 rounded-3xl border border-white shadow-sm">
         <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
           <ClipboardCheck className="w-5 h-5" />
         </div>
@@ -98,19 +97,11 @@ export default function HRLeaveManagement() {
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`relative px-5 py-2 text-sm font-bold rounded-xl transition-colors duration-300 ${
-              filter === tab ? "text-indigo-700" : "text-slate-500 hover:text-slate-700"
+            className={`relative px-5 py-2 text-sm font-bold rounded-xl transition-colors duration-200 ${
+              filter === tab ? "bg-white text-indigo-700 shadow-sm border border-slate-100" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            {filter === tab && (
-              <motion.div
-                layoutId="hrLeaveTab"
-                className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-100"
-                initial={false}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5">
               {tab}
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                 filter === tab ? "bg-indigo-100 text-indigo-700" : "bg-slate-200 text-slate-500"
@@ -129,24 +120,22 @@ export default function HRLeaveManagement() {
           <p className="mt-3 font-medium text-slate-500">Loading leave requests...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 max-w-xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 max-w-xl mx-auto">
           <ClipboardCheck className="w-10 h-10 text-slate-300 mb-3" />
           <h3 className="text-xl font-bold text-slate-700">No {filter === "ALL" ? "" : filter.toLowerCase()} leaves</h3>
           <p className="text-slate-500 font-medium mt-1">No manager-approved requests in this category.</p>
-        </motion.div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((leave, index) => (
-              <HRLeaveCard
-                key={leave.id}
-                leave={leave}
-                index={index}
-                updating={updating}
-                onDecision={handleDecision}
-              />
-            ))}
-          </AnimatePresence>
+          {filtered.map((leave, index) => (
+            <HRLeaveCard
+              key={leave.id}
+              leave={leave}
+              index={index}
+              updating={updating}
+              onDecision={handleDecision}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -166,13 +155,8 @@ const HRLeaveCard = ({ leave, index, updating, onDecision }) => {
   const initials = `${emp?.firstName?.[0] ?? ""}${emp?.lastName?.[0] ?? ""}`;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.35, delay: index * 0.05 }}
-      className={`bg-white rounded-[24px] border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group ${
+    <div
+      className={`bg-white rounded-[24px] border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col group ${
         isPending ? "border-slate-100 hover:border-indigo-100" : `${cfg.border}`
       }`}
     >
@@ -244,7 +228,7 @@ const HRLeaveCard = ({ leave, index, updating, onDecision }) => {
             <button
               disabled={isUpdating}
               onClick={() => onDecision(leave.id, "APPROVED")}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all disabled:opacity-50 shadow-sm hover:shadow-emerald-200 hover:shadow-md"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all duration-200 disabled:opacity-50 shadow-sm"
             >
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               Approve
@@ -252,7 +236,7 @@ const HRLeaveCard = ({ leave, index, updating, onDecision }) => {
             <button
               disabled={isUpdating}
               onClick={() => onDecision(leave.id, "REJECTED")}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white text-sm font-bold border border-rose-200 transition-all disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white text-sm font-bold border border-rose-200 transition-all duration-200 disabled:opacity-50"
             >
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
               Reject
@@ -260,6 +244,6 @@ const HRLeaveCard = ({ leave, index, updating, onDecision }) => {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
