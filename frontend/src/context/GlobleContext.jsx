@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import socket from "../utils/socket";
 import toast from "react-hot-toast";
 
@@ -21,9 +21,7 @@ export const GlobleProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/auth/me", {
-          withCredentials: true
-        });
+        const res = await api.get("/api/auth/me");
         setUser(res.data.user);
       } catch (error) {
         console.log("No logged in user:", error?.response?.data || error.message);
@@ -38,9 +36,7 @@ export const GlobleProvider = ({ children }) => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/notifications", {
-        withCredentials: true
-      });
+      const res = await api.get("/api/notifications");
       setNotifications(res.data.notifications);
       setUnreadCount(res.data.notifications.filter(n => !n.read).length);
     } catch (error) {
@@ -93,7 +89,7 @@ export const GlobleProvider = ({ children }) => {
   const markAsRead = async (id) => {
 
     try {
-      await axios.patch(`http://localhost:3000/api/notifications/${id}/read`, {}, { withCredentials: true });
+      await api.patch(`/api/notifications/${id}/read`);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
@@ -103,7 +99,7 @@ export const GlobleProvider = ({ children }) => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.patch("http://localhost:3000/api/notifications/read-all", {}, { withCredentials: true });
+      await api.patch("/api/notifications/read-all");
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -113,7 +109,7 @@ export const GlobleProvider = ({ children }) => {
 
   const clearNotification = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/notifications/${id}`, { withCredentials: true });
+      await api.delete(`/api/notifications/${id}`);
       setNotifications(prev => prev.filter(n => n.id !== id));
       // Need to adjust unread count if the deleted notification was unread
       const notif = notifications.find(n => n.id === id);
@@ -127,7 +123,7 @@ export const GlobleProvider = ({ children }) => {
 
   const clearAllNotifications = async () => {
     try {
-      await axios.delete("http://localhost:3000/api/notifications/clear-all", { withCredentials: true });
+      await api.delete("/api/notifications/clear-all");
       setNotifications([]);
       setUnreadCount(0);
     } catch (error) {
@@ -138,11 +134,7 @@ export const GlobleProvider = ({ children }) => {
   const logout = async () => {
 
     try {
-      await axios.post(
-        "http://localhost:3000/api/auth/logout",
-        {},
-        { withCredentials: true }
-      );
+      await api.post("/api/auth/logout");
       setUser(null);
       socket.disconnect();
       window.location.href = "/login";

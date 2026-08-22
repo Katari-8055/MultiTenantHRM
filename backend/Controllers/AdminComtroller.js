@@ -284,19 +284,21 @@ export const updateEmployee = asyncHandler(async (req, res, next) => {
     return res.status(404).json({ success: false, message: "Employee not found" });
   }
 
+  const validGender = (gender && ['MALE', 'FEMALE', 'OTHER'].includes(String(gender).toUpperCase())) ? String(gender).toUpperCase() : undefined;
+
   const updatedEmployee = await prisma.employee.update({
     where: { id },
     data: {
-      firstName,
-      lastName,
-      phone,
-      gender,
+      firstName: firstName || undefined,
+      lastName: lastName !== undefined && lastName !== '' ? lastName : undefined,
+      phone: phone !== undefined && phone !== '' ? phone : undefined,
+      gender: validGender,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-      position,
+      position: position !== undefined && position !== '' ? position : undefined,
       salary: salary ? parseFloat(salary) : undefined,
       dateOfJoining: dateOfJoining ? new Date(dateOfJoining) : undefined,
-      employmentType,
-      status,
+      employmentType: employmentType || undefined,
+      status: status || undefined,
       departmentId: departmentId || undefined
     },
     include: {

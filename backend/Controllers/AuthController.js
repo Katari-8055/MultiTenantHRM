@@ -329,24 +329,28 @@ export const updateMe = asyncHandler(async (req, res) => {
   const { name, firstName, lastName, email, phone, gender, dateOfBirth, position } = req.body;
 
   let updatedUser = null;
+  const validGender = (gender && ['MALE', 'FEMALE', 'OTHER'].includes(String(gender).toUpperCase())) ? String(gender).toUpperCase() : undefined;
 
   if (tenantId && !employeeId) {
     updatedUser = await prisma.tenant.update({
       where: { id: tenantId },
-      data: { name, email },
+      data: { 
+        name: name || undefined, 
+        email: email || undefined 
+      },
       select: { id: true, name: true, email: true, role: true, domain: true }
     });
   } else if (employeeId) {
     updatedUser = await prisma.employee.update({
       where: { id: employeeId },
       data: { 
-        firstName, 
-        lastName, 
-        email, 
-        phone, 
-        gender, 
+        firstName: firstName || undefined, 
+        lastName: lastName !== undefined && lastName !== '' ? lastName : undefined, 
+        email: email || undefined, 
+        phone: phone !== undefined && phone !== '' ? phone : undefined, 
+        gender: validGender, 
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined, 
-        position 
+        position: position !== undefined && position !== '' ? position : undefined 
       },
       select: { 
         id: true, 

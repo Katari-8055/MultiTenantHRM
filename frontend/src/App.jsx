@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import React, { useContext } from "react";
+import React from "react";
 import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/Auth/Login.jsx";
@@ -7,7 +7,6 @@ import Home from "./pages/Home.jsx";
 import SignUp from "./pages/Auth/SignUp.jsx";
 import SetPassword from "./pages/Auth/SetPassword.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
-import { GlobleContext } from "./context/GlobleContext.jsx";
 import AdminDashboardPage from "./pages/Admin/AdminDashboardPage.jsx";
 import DapManagement from "./pages/Admin/DepManagement.jsx";
 import ProManagement from "./pages/Admin/ProManagement.jsx";
