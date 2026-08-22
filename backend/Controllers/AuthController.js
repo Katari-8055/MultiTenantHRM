@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "../Services/MailServices.js";
+import { addEmailJob } from "../Services/EmailQueue.js";
 import config from "../config/config.js";
 
 //---------------------------------------------Register Tenant---------------------------------------------//
@@ -75,6 +76,15 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, email, role, salary, departmentId } = req.body;
   const tenantId = req.tenantId;
 
+  if (!firstName || !email || !role || !departmentId) {
+    return res.status(400).json({ message: "Please fill in all required fields (First Name, Email, Department, and Role)." });
+  }
+
+  const validRoles = ['HR', 'MANAGER', 'EMPLOYEE'];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ message: "Invalid role selected. Must be HR, MANAGER, or EMPLOYEE." });
+  }
+
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId }
   });
@@ -126,11 +136,11 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
 
   const link = `http://localhost:5173/set-password?token=${token}`;
 
-  await sendEmail(
-    newEmployee.email,
-    "Welcome to HR Management System",
-    `Hello ${newEmployee.firstName},\n\nYour account has been created under the ${departmentRecord.name} department.\nPlease set your password using the link below:\n\n${link}\n\nThis link will expire in 24 hours.`
-  );
+  addEmailJob({
+    to: newEmployee.email,
+    subject: "Welcome to HR Management System",
+    text: `Hello ${newEmployee.firstName},\n\nYour account has been created under the ${departmentRecord.name} department.\nPlease set your password using the link below:\n\n${link}\n\nThis link will expire in 24 hours.`
+  });
 
   if (req.io) {
     req.io.to(`tenant_${tenant.id}`).emit("refresh-data", { type: 'employees' });

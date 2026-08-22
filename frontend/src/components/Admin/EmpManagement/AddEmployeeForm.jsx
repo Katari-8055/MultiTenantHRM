@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 import { GlobleContext } from "../../../context/GlobleContext";
 
 const AddEmployeeForm = ({ onClose, onAdd }) => {
@@ -33,12 +34,12 @@ const AddEmployeeForm = ({ onClose, onAdd }) => {
 
     console.log("Form Data:", formData);
 
-
     try {
       const res = await axios.post("http://localhost:3000/api/auth/addEmployee", formData, {
         withCredentials: true,
       });
       console.log("Employee added:", res.data);
+      toast.success("Employee added successfully!");
 
       // Update global context list
       if (res.data.employee) {
@@ -53,6 +54,8 @@ const AddEmployeeForm = ({ onClose, onAdd }) => {
       onClose();
     } catch (error) {
       console.error(error);
+      const message = error?.response?.data?.message || "Failed to add employee";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

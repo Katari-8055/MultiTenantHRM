@@ -36,15 +36,17 @@ services:
     container_name: hrm-backend
     ports:
       - "3000:3000"
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     env_file:
       - .env
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/hrm?schema=public&connection_limit=15&pool_timeout=10
       - DIRECT_URL=postgresql://postgres:postgrespassword@postgres:5432/hrm?schema=public
       - REDIS_URL=redis://redis:6379
+    extra_hosts:
+      - "smtp.gmail.com:host-gateway"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     depends_on:
       postgres:
         condition: service_healthy
