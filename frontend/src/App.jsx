@@ -64,6 +64,7 @@ const App = () => {
           <Route path="profile" element={<HrProfileManagement />} />
           <Route path="leave" element={<HrLeaveManagement />} />
           <Route path="employee" element={<HrEmpManagement />} />
+          <Route path="employee/:id" element={<AdminEmpDetailPage />} />
         </Route>
       </Route>
 

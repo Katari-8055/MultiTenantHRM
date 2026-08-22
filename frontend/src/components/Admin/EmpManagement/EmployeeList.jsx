@@ -10,8 +10,9 @@ import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 import AddEmployeeForm from "./AddEmployeeForm.jsx";
 
 const EmployeeList = () => {
-  const { employeeList, setEmployeeList } = useContext(GlobleContext);
+  const { user, employeeList, setEmployeeList } = useContext(GlobleContext);
   const [showForm, setShowForm] = useState(false);
+  const basePath = user?.role === "HR" ? "/hr" : "/admin";
 
 
   const getEmployee = async () => {
@@ -74,7 +75,7 @@ const EmployeeList = () => {
                   </td>
 
                   <td className="py-3 px-4 flex gap-2">
-                    <Link to={`/admin/employee/${emp.id}`}>
+                    <Link to={`${basePath}/employee/${emp.id}`}>
                       <button className="p-2 rounded-full hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-all duration-300 cursor-pointer group">
                         <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       </button>

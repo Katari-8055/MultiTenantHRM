@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { GlobleContext } from "../../../context/GlobleContext";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,6 +28,8 @@ import ProfileCard from "../../../components/Common/Profile/ProfileCard";
 const AdminEmployeeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(GlobleContext);
+  const basePath = user?.role === "HR" ? "/hr" : "/admin";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -137,7 +140,7 @@ const AdminEmployeeDetail = () => {
       sidebar={
         <div className="space-y-6">
           <button 
-            onClick={() => navigate("/admin/employee")}
+            onClick={() => navigate(`${basePath}/employee`)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors group mb-2"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
