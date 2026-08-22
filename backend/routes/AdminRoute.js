@@ -8,15 +8,15 @@ import { getManagerProjects, updateProjectStatus, getManagerDashboardStats, getM
 
 const router = express.Router();
 
-router.post('/addDepartment',AuthenticateMiddleware, addDepartment);
-router.get('/getDepartment',AuthenticateMiddleware,getDepartment);
-router.get('/getEmployee',AuthenticateMiddleware,getEmployee);
-router.get('/employee/:id', AuthenticateMiddleware, getEmployeeById);
-router.put('/employee/:id', AuthenticateMiddleware, updateEmployee);
-router.post('/addProject',AuthenticateMiddleware, addProject);
-router.get('/getProject',AuthenticateMiddleware,getProject);
-router.get('/dashboard-stats', AuthenticateMiddleware, getDashboardStats);
-router.delete('/deleteProject/:projectId',AuthenticateMiddleware,deleteProject);
+router.post('/addDepartment', AuthenticateMiddleware, authorize('ADMIN'), addDepartment);
+router.get('/getDepartment', AuthenticateMiddleware, authorize('ADMIN', 'HR', 'MANAGER'), getDepartment);
+router.get('/getEmployee', AuthenticateMiddleware, authorize('ADMIN', 'HR'), getEmployee);
+router.get('/employee/:id', AuthenticateMiddleware, authorize('ADMIN', 'HR'), getEmployeeById);
+router.put('/employee/:id', AuthenticateMiddleware, authorize('ADMIN', 'HR'), updateEmployee);
+router.post('/addProject', AuthenticateMiddleware, authorize('ADMIN'), addProject);
+router.get('/getProject', AuthenticateMiddleware, authorize('ADMIN', 'HR', 'MANAGER'), getProject);
+router.get('/dashboard-stats', AuthenticateMiddleware, authorize('ADMIN'), getDashboardStats);
+router.delete('/deleteProject/:projectId', AuthenticateMiddleware, authorize('ADMIN'), deleteProject);
 
 router.get('/getEmpProject',AuthenticateMiddleware,getEmpProjects);
 router.post('/applyLeave',AuthenticateMiddleware, applyLeave);

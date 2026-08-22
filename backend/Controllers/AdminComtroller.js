@@ -155,11 +155,23 @@ export const getProject = asyncHandler(async (req, res, next) => {
 export const deleteProject = asyncHandler(async (req, res, next) => {
   const { projectId } = req.params;
   const tenantId = req.tenantId;
-  await prisma.project.delete({
-    where: { id: projectId }
-  })
 
-  if (req.io && tenantId) {
+  if (!tenantId) {
+    return res.status(401).json({ success: false, message: "Tenant ID missing in request" });
+  }
+
+  const result = await prisma.project.deleteMany({
+    where: { 
+      id: projectId, 
+      tenantId 
+    }
+  });
+
+  if (result.count === 0) {
+    return res.status(404).json({ success: false, message: "Project not found or unauthorized to delete" });
+  }
+
+  if (req.io) {
       req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
       req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
@@ -167,9 +179,8 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Project deleted successfully"
-  })
-  
-})
+  });
+});
 
 
 
