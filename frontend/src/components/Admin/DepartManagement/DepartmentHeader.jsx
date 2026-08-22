@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Plus } from "lucide-react";
 import CreateDepartmentForm from "../EmpManagement/CreateDepartmentForm";
+import { GlobleContext } from "../../../context/GlobleContext";
 
 const DepartmentHeader = () => {
+  const { user } = useContext(GlobleContext);
   const [showDeptForm, setShowDeptForm] = useState(false);
+  const isAdmin = user?.role === 'ADMIN';
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white shadow-md rounded-2xl px-6 py-4 mb-6">
@@ -18,14 +21,16 @@ const DepartmentHeader = () => {
         </p>
       </div>
 
-      {/* 🔹 Right Section: Button */}
-      <button
-        className="mt-4 sm:mt-0 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-lg shadow-md transition-all duration-300 cursor-pointer"
-        onClick={() => setShowDeptForm(true)}
-      >
-        <Plus size={18} className="text-white" />
-        Add Department
-      </button>
+      {/* 🔹 Right Section: Button — Admin only */}
+      {isAdmin && (
+        <button
+          className="mt-4 sm:mt-0 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-lg shadow-md transition-all duration-300 cursor-pointer"
+          onClick={() => setShowDeptForm(true)}
+        >
+          <Plus size={18} className="text-white" />
+          Add Department
+        </button>
+      )}
 
       {/* 🔹 Modal Component */}
       {showDeptForm && (

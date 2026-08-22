@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 import { GlobleContext } from "../../../context/GlobleContext";
 
 const CreateDepartmentForm = ({ onClose }) => {
@@ -14,6 +15,7 @@ const CreateDepartmentForm = ({ onClose }) => {
     try {
       const res = await axios.post("http://localhost:3000/api/admin/addDepartment", { name }, { withCredentials: true });
       console.log("Department created:", res.data);
+      toast.success("Department created successfully!");
 
       if (res.data.department) {
         setDepartments((prev) => [...prev, res.data.department]);
@@ -23,6 +25,8 @@ const CreateDepartmentForm = ({ onClose }) => {
       onClose();
     } catch (error) {
       console.error(error);
+      const message = error?.response?.data?.message || "Failed to create department";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

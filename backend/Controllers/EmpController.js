@@ -97,11 +97,10 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
         return { newLeave: createdLeave, notification: createdNotification };
     });
 
-    if (resolvedManagerId && req.io) {
-        req.io.to(resolvedManagerId).emit("new-notification", notification);
-        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
-        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
-    } else if (req.io) {
+    if (req.io) {
+        if (resolvedManagerId) {
+            req.io.to(resolvedManagerId).emit("new-notification", notification);
+        }
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
