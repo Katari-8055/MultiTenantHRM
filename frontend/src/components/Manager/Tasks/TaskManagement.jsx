@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -53,14 +53,14 @@ const TaskManagement = () => {
 
   const fetchData = async () => {
     try {
-      const [tasksRes, empRes] = await Promise.all([
-        axios.get("http://localhost:3000/api/admin/manager-tasks", { withCredentials: true }),
-        axios.get("http://localhost:3000/api/admin/getEmployee", { withCredentials: true }),
+      const [tasksRes, teamRes] = await Promise.all([
+        api.get("/api/admin/manager-tasks"),
+        api.get("/api/admin/manager-team"),
       ]);
-      setTasks(tasksRes.data.tasks);
-      setEmployees(empRes.data.employees);
+      setTasks(tasksRes.data.tasks || tasksRes.data.items || []);
+      setEmployees(teamRes.data.employees || []);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
+      console.error("Error fetching tasks/team:", err);
     } finally {
       setLoading(false);
     }
@@ -76,8 +76,7 @@ const TaskManagement = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await axios.post("http://localhost:3000/api/admin/manager-task", newTask, {
-        withCredentials: true,
+      const res = await api.post("/api/admin/manager-task", newTask, {
       });
       setTasks([res.data.task, ...tasks]);
       setShowModal(false);
@@ -91,8 +90,7 @@ const TaskManagement = () => {
 
   const handleUpdateStatus = async (taskId, newStatus) => {
     try {
-      const res = await axios.put(`http://localhost:3000/api/admin/manager-task/${taskId}`, { status: newStatus }, {
-        withCredentials: true,
+      const res = await api.put(`/api/admin/manager-task/${taskId}`, { status: newStatus }, {
       });
       setTasks(tasks.map(t => t.id === taskId ? res.data.task : t));
     } catch (err) {
@@ -103,8 +101,7 @@ const TaskManagement = () => {
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
     try {
-      await axios.delete(`http://localhost:3000/api/admin/manager-task/${taskId}`, {
-        withCredentials: true,
+      await api.delete(`/api/admin/manager-task/${taskId}`, {
       });
       setTasks(tasks.filter(t => t.id !== taskId));
     } catch (err) {
@@ -385,11 +382,22 @@ const TaskManagement = () => {
                         onChange={(e) => setNewTask({ ...newTask, assigneeId: e.target.value })}
                         className="w-full bg-slate-50 border-none rounded-2xl py-3.5 px-5 font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none"
                       >
-                        <option value="">Select Employee</option>
-                        {employees.map(emp => (
-                          <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                        ))}
+                        <option value="">Select Project Member</option>
+                        {employees && employees.length > 0 ? (
+                          employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.firstName} {emp.lastName} ({emp.projectNames?.join(', ') || emp.role})
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>No employees assigned to your projects</option>
+                        )}
                       </select>
+                      {employees && employees.length === 0 && (
+                        <p className="text-[11px] text-amber-600 font-medium mt-1.5">
+                          ℹ️ Only employees assigned to your projects can receive tasks.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+﻿import React, { useContext, useEffect, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -8,7 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { GlobleContext } from "../../../context/GlobleContext";
-import axios from "axios";
+import api from "../../../utils/api";
 import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
 const DepartmentList = () => {
@@ -35,7 +35,7 @@ const DepartmentList = () => {
 
   const getDepartment = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/getDepartment", { withCredentials: true });
+      const res = await api.get("/api/admin/getDepartment");
       setDepartments(res.data.departments);
       console.log("Departments fetched:", res.data.departments);
     } catch (error) {

@@ -35,6 +35,69 @@ export const getManagerProjects = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true, projects });
 });
 
+//-----------------------------------------------------Get Manager Team Members (Project Members)-----------------------------------------------------//
+
+export const getManagerTeamMembers = asyncHandler(async (req, res, next) => {
+    const { tenantId, employeeId } = req;
+
+    if (!tenantId || !employeeId) {
+        return res.status(400).json({ message: "tenantId and employeeId are required" });
+    }
+
+    // Find all projects managed by this manager along with their members
+    const projects = await prisma.project.findMany({
+        where: {
+            tenantId,
+            managerId: employeeId
+        },
+        select: {
+            id: true,
+            name: true,
+            members: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    role: true,
+                    position: true,
+                    department: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Extract unique employees assigned to any project managed by this manager
+    const memberMap = new Map();
+    projects.forEach(project => {
+        project.members.forEach(member => {
+            if (!memberMap.has(member.id)) {
+                memberMap.set(member.id, {
+                    ...member,
+                    projectNames: [project.name],
+                    projects: [{ id: project.id, name: project.name }]
+                });
+            } else {
+                memberMap.get(member.id).projectNames.push(project.name);
+                memberMap.get(member.id).projects.push({ id: project.id, name: project.name });
+            }
+        });
+    });
+
+    const employees = Array.from(memberMap.values());
+
+    res.status(200).json({
+        success: true,
+        employees,
+        projects
+    });
+});
+
 //-----------------------------------------------------Update Project Status-----------------------------------------------------//
 
 export const updateProjectStatus = asyncHandler(async (req, res, next) => {

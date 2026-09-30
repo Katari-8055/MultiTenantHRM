@@ -3,15 +3,15 @@ import prisma from "../utils/client.js";
 
 //---------------------------------------Get User Notifications---------------------------------------//
 export const getUserNotifications = asyncHandler(async (req, res, next) => {
-    const { employeeId } = req; // Extracted from auth middleware
+    const userId = req.employeeId || req.tenantId;
 
-    if (!employeeId) {
+    if (!userId) {
         return res.status(401).json({ message: "Unauthorized. User ID not found." });
     }
 
     const notifications = await prisma.notification.findMany({
         where: {
-            userId: employeeId
+            userId: userId
         },
         orderBy: {
             createdAt: 'desc'
@@ -25,10 +25,10 @@ export const getUserNotifications = asyncHandler(async (req, res, next) => {
 //---------------------------------------Mark Notification as Read---------------------------------------//
 export const markNotificationRead = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    const { employeeId } = req;
+    const userId = req.employeeId || req.tenantId;
 
     const notification = await prisma.notification.findFirst({
-        where: { id, userId: employeeId }
+        where: { id, userId: userId }
     });
 
     if (!notification) {
@@ -40,8 +40,8 @@ export const markNotificationRead = asyncHandler(async (req, res, next) => {
         data: { read: true }
     });
 
-    if (req.io && employeeId) {
-        req.io.to(employeeId).emit("refresh-data", { type: 'notifications' });
+    if (req.io && userId) {
+        req.io.to(userId).emit("refresh-data", { type: 'notifications' });
     }
 
     res.status(200).json({ success: true, notification: updatedNotification });
@@ -49,15 +49,15 @@ export const markNotificationRead = asyncHandler(async (req, res, next) => {
 
 //---------------------------------------Mark All as Read---------------------------------------//
 export const markAllNotificationsRead = asyncHandler(async (req, res, next) => {
-    const { employeeId } = req;
+    const userId = req.employeeId || req.tenantId;
 
     await prisma.notification.updateMany({
-        where: { userId: employeeId, read: false },
+        where: { userId: userId, read: false },
         data: { read: true }
     });
 
-    if (req.io && employeeId) {
-        req.io.to(employeeId).emit("refresh-data", { type: 'notifications' });
+    if (req.io && userId) {
+        req.io.to(userId).emit("refresh-data", { type: 'notifications' });
     }
 
     res.status(200).json({ success: true, message: "All notifications marked as read" });

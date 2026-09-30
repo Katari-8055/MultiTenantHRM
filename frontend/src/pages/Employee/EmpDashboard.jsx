@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+﻿import React, { useState, useEffect, useContext } from "react";
+import api from "../../utils/api";
 import { 
   Users, 
   Briefcase, 
@@ -30,8 +30,7 @@ const EmpDashboard = () => {
     }
 
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/emp-dashboard-stats", {
-        withCredentials: true,
+      const res = await api.get("/api/admin/emp-dashboard-stats", {
       });
       setEmpStats(res.data);
     } catch (error) {

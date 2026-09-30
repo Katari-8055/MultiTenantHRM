@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { User, Mail, Lock, Globe, ArrowRight } from "lucide-react";
 
@@ -27,7 +27,7 @@ const SignUp = () => {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/register", form);
+      const res = await api.post("/api/auth/register", form);
       console.log("Signup success:", res.data);
       navigate("/login");
     } catch (err) {

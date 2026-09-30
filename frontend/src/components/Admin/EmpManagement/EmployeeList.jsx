@@ -1,9 +1,9 @@
-import React, { useContext } from "react";
+﻿import React, { useContext } from "react";
 import { Eye, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useEffect } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 import { GlobleContext } from "../../../context/GlobleContext";
 import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
@@ -17,9 +17,8 @@ const EmployeeList = () => {
 
   const getEmployee = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:3000/api/admin/getEmployee",
-        { withCredentials: true }
+      const res = await api.get(
+        "/api/admin/getEmployee"
       );
       setEmployeeList(res.data.employees);
     } catch (error) {

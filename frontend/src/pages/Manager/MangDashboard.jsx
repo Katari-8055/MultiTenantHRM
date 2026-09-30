@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+﻿import React, { useContext, useEffect, useState } from "react";
+import api from "../../utils/api";
 import { Loader2, FolderTree, Users, Palmtree, CheckCircle } from "lucide-react";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
@@ -18,8 +18,7 @@ const MangDashboard = () => {
     }
 
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/manager-dashboard-stats", {
-        withCredentials: true,
+      const res = await api.get("/api/admin/manager-dashboard-stats", {
       });
       if (res.data.success) {
         setManagerStats(res.data);

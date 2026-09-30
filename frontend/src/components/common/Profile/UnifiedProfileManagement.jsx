@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
-import axios from "axios";
+﻿import React, { useState, useContext, useEffect } from "react";
+import api from "../../../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -79,8 +79,7 @@ const UnifiedProfileManagement = () => {
             position: formData.position
           };
 
-      const res = await axios.put("http://localhost:3000/api/auth/updateMe", updateData, {
-        withCredentials: true,
+      const res = await api.put("/api/auth/updateMe", updateData, {
       });
       setUser(res.data.user);
       showMsg("success", "Profile records updated successfully!");
@@ -95,8 +94,7 @@ const UnifiedProfileManagement = () => {
     setLoading(true);
     setMessage({ type: "", text: "" });
     try {
-      await axios.put("http://localhost:3000/api/auth/changePassword", securityData, {
-        withCredentials: true,
+      await api.put("/api/auth/changePassword", securityData, {
       });
       showMsg("success", "Security credentials updated successfully!");
       if (callback) callback();

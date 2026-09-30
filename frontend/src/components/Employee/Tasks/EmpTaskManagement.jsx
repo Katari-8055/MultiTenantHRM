@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+﻿import React, { useState, useEffect } from "react";
+import api from "../../../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -46,7 +46,7 @@ const EmpTaskManagement = () => {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/emp-tasks", { withCredentials: true });
+      const res = await api.get("/api/admin/emp-tasks");
       setTasks(res.data.tasks);
     } catch (err) {
       console.error("Error fetching tasks:", err);
@@ -64,10 +64,9 @@ const EmpTaskManagement = () => {
   const handleStatusUpdate = async (taskId, newStatus) => {
     setUpdatingId(taskId);
     try {
-      const res = await axios.patch(
-        `http://localhost:3000/api/admin/emp-task-status/${taskId}`,
-        { status: newStatus },
-        { withCredentials: true }
+      const res = await api.patch(
+        `/api/admin/emp-task-status/${taskId}`,
+        { status: newStatus }
       );
       setTasks(tasks.map(t => t.id === taskId ? res.data.task : t));
     } catch (err) {

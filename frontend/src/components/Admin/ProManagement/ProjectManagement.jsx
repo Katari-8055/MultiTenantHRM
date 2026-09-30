@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from "react";
+﻿import React, { useState, useEffect, useContext } from "react";
 import { PlusCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AddProjectForm from "./AddProjectForm";
-import axios from "axios";
+import api from "../../../utils/api";
 import { GlobleContext } from "../../../context/GlobleContext";
 import { useRealTimeSync } from "../../../hooks/useRealTimeSync";
 
@@ -31,9 +31,8 @@ export default function ProjectManagement() {
 
   const deleteProject = async (projectId) => {
     try {
-      const res = await axios.delete(
-        `http://localhost:3000/api/admin/deleteProject/${projectId}`,
-        { withCredentials: true }
+      const res = await api.delete(
+        `/api/admin/deleteProject/${projectId}`
       );
 
       if (res.status === 200) {
@@ -46,9 +45,8 @@ export default function ProjectManagement() {
 
   const getProject = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/admin/getProject",
-        { withCredentials: true }
+      const response = await api.get(
+        "/api/admin/getProject"
       );
       setProjects(response.data.projects || []);
     } catch (error) {

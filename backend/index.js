@@ -41,25 +41,30 @@ app.use((req, res, next) => {
   next();
 });
 
-// Security and Performance Middlewares
-app.use(helmet()); // Sets various HTTP headers for security
-app.use(compression()); // Compress response bodies for better performance
-
-// Global Rate Limiter — applies to all /api routes
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again after 15 minutes',
-});
-app.use('/api/', limiter);
-
-app.use(cors({
-  origin: config.frontendUrl,
+const corsOptions = {
+  origin: config.frontendUrl || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+app.use(cors(corsOptions));
+
+// Security and Performance Middlewares
+app.use(helmet({ crossOriginResourcePolicy: false })); // Sets HTTP headers for security
+app.use(compression()); // Compress response bodies for better performance
+
+// Global Rate Limiter — applies to all /api routes (skipped in dev/testing if configured)
+if (process.env.SKIP_RATE_LIMIT !== 'true') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Reasonable limit
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+  });
+  app.use('/api/', limiter);
+}
 
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));

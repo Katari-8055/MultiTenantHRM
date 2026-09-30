@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from "../../utils/api";
 import { GlobleContext } from "../../context/GlobleContext";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync";
 
@@ -24,9 +24,8 @@ export default function HRProjectMang() {
 
   const getProject = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/admin/getProject",
-        { withCredentials: true }
+      const response = await api.get(
+        "/api/admin/getProject"
       );
       setProjects(response.data.projects || []);
     } catch (error) {

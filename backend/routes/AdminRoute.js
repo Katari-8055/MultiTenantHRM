@@ -3,15 +3,15 @@ import { AuthenticateMiddleware, authorize } from '../middlewares/AuthMiddleware
 import { addDepartment, addProject, deleteProject, getDashboardStats, getDepartment, getEmployee, getEmployeeById, getProject, updateEmployee } from '../Controllers/AdminComtroller.js';
 import { applyLeave, getEmpProjects, getLeaves, getEmpTasks, updateEmpTaskStatus, getEmpDashboardStats } from '../Controllers/EmpController.js';
 import { getHRLeaves, updateLeaveStatus, getHrDashboardStats } from '../Controllers/HRControllers.js';
-import { getManagerProjects, updateProjectStatus, getManagerDashboardStats, getManagerLeaves, updateManagerLeaveStatus, getManagerTasks, createTask, updateTaskStatus, deleteTask } from '../Controllers/ManagerController.js';
+import { getManagerProjects, getManagerTeamMembers, updateProjectStatus, getManagerDashboardStats, getManagerLeaves, updateManagerLeaveStatus, getManagerTasks, createTask, updateTaskStatus, deleteTask } from '../Controllers/ManagerController.js';
 
 
 const router = express.Router();
 
 router.post('/addDepartment', AuthenticateMiddleware, authorize('ADMIN'), addDepartment);
 router.get('/getDepartment', AuthenticateMiddleware, authorize('ADMIN', 'HR', 'MANAGER'), getDepartment);
-router.get('/getEmployee', AuthenticateMiddleware, authorize('ADMIN', 'HR'), getEmployee);
-router.get('/employee/:id', AuthenticateMiddleware, authorize('ADMIN', 'HR'), getEmployeeById);
+router.get('/getEmployee', AuthenticateMiddleware, authorize('ADMIN', 'HR', 'MANAGER'), getEmployee);
+router.get('/employee/:id', AuthenticateMiddleware, authorize('ADMIN', 'HR', 'MANAGER'), getEmployeeById);
 router.put('/employee/:id', AuthenticateMiddleware, authorize('ADMIN', 'HR'), updateEmployee);
 router.post('/addProject', AuthenticateMiddleware, authorize('ADMIN'), addProject);
 router.get('/getProject', AuthenticateMiddleware, authorize('ADMIN', 'HR', 'MANAGER'), getProject);
@@ -29,6 +29,7 @@ router.get('/hr-dashboard-stats', AuthenticateMiddleware, authorize('ADMIN', 'HR
 //====================== MANAGER ======================//
 router.get('/manager-dashboard-stats', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerDashboardStats);
 router.get('/manager-projects', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerProjects);
+router.get('/manager-team', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerTeamMembers);
 router.put('/manager-project/:projectId/status', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), updateProjectStatus);
 router.get('/manager-leaves', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), getManagerLeaves);
 router.put('/manager-leave-status', AuthenticateMiddleware, authorize('MANAGER', 'ADMIN'), updateManagerLeaveStatus);

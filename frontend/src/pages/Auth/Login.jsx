@@ -1,11 +1,13 @@
 import React, { useState, useContext } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { GlobleContext } from "../../context/GlobleContext";
 import { useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const { setUser } = useContext(GlobleContext);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -22,24 +24,25 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const endpoint =
         form.role === "ADMIN"
-          ? "http://localhost:3000/api/auth/login"
-          : "http://localhost:3000/api/auth/employeeLogin";
+          ? "/api/auth/login"
+          : "/api/auth/employeeLogin";
 
-      const res = await axios.post(
-        endpoint,
-        {
-          email: form.email,
-          password: form.password,
-        },
-        { withCredentials: true }
-      );
+      const res = await api.post(endpoint, {
+        email: form.email,
+        password: form.password,
+      });
 
-      setUser(res.data);
+      // ✅ Fix: set the correct user object from response
+      const userData = res.data.tenant || res.data.employee || res.data;
+      setUser({ ...userData, role: res.data.role });
+
       const role = res.data.role;
+      toast.success("Login successful!");
 
       // ✅ Redirect based on role
       if (role === "ADMIN") {
@@ -51,13 +54,14 @@ const Login = () => {
       } else if (role === "MANAGER") {
         navigate("/manager/dashboard");
       } else {
-        console.log("Invalid role");
         navigate("/");
       }
-
-      console.log("Login success:", receivedUser);
     } catch (error) {
+      const msg = error?.response?.data?.message || "Invalid credentials";
+      toast.error(msg);
       console.log("Login Error =>", error?.response?.data || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,9 +117,12 @@ const Login = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-2 rounded-lg mt-4"
+          disabled={loading}
+          className={`w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-2 rounded-lg mt-4 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          Login
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : 'Login'}
         </button>
 
         <p className="text-center text-gray-600 mt-6 text-sm">

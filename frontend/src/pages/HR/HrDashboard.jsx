@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+﻿import React, { useState, useEffect } from "react";
+import api from "../../utils/api";
 import { Users, Building2, CalendarCheck, FileText, TrendingUp, Bell, Search, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -22,8 +22,7 @@ const HrDashboard = () => {
     }
 
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/hr-dashboard-stats", {
-        withCredentials: true,
+      const res = await api.get("/api/admin/hr-dashboard-stats", {
       });
       setHrStats(res.data);
     } catch (error) {

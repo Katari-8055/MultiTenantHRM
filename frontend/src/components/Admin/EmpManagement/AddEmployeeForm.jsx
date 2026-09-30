@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+﻿import React, { useState, useEffect, useContext } from "react";
+import api from "../../../utils/api";
 import toast from "react-hot-toast";
 import { GlobleContext } from "../../../context/GlobleContext";
 
@@ -35,8 +35,7 @@ const AddEmployeeForm = ({ onClose, onAdd }) => {
     console.log("Form Data:", formData);
 
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/addEmployee", formData, {
-        withCredentials: true,
+      const res = await api.post("/api/auth/addEmployee", formData, {
       });
       console.log("Employee added:", res.data);
       toast.success("Employee added successfully!");
@@ -63,7 +62,7 @@ const AddEmployeeForm = ({ onClose, onAdd }) => {
 
   const getDepartment = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/getDepartment", { withCredentials: true });
+      const res = await api.get("/api/admin/getDepartment");
       setDepartments(res.data.departments);
     } catch (error) {
       console.log(error, "Unable to find Deparment");

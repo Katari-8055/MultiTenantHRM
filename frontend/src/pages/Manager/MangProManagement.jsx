@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+﻿import React, { useContext, useEffect, useState } from "react";
+import api from "../../utils/api";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,8 +14,7 @@ const MangProManagement = () => {
 
   const fetchProjects = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/manager-projects", {
-        withCredentials: true,
+      const res = await api.get("/api/admin/manager-projects", {
       });
       if (res.data.success) {
         setManagerProjects(res.data.projects);
@@ -36,10 +35,9 @@ const MangProManagement = () => {
   const handleStatusUpdate = async (projectId, newStatus) => {
     setUpdatingId(projectId);
     try {
-      const res = await axios.put(
-        `http://localhost:3000/api/admin/manager-project/${projectId}/status`,
-        { status: newStatus },
-        { withCredentials: true }
+      const res = await api.put(
+        `/api/admin/manager-project/${projectId}/status`,
+        { status: newStatus }
       );
       if (res.data.success) {
         // Optimistically update the exact project in state

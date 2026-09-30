@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext } from "react";
+﻿import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { GlobleContext } from "../../../context/GlobleContext";
-import axios from "axios";
+import api from "../../../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -60,8 +60,8 @@ const AdminEmployeeDetail = () => {
     setLoading(true);
     try {
       const [empRes, deptRes] = await Promise.all([
-        axios.get(`http://localhost:3000/api/admin/employee/${id}`, { withCredentials: true }),
-        axios.get("http://localhost:3000/api/admin/getDepartment", { withCredentials: true })
+        api.get(`/api/admin/employee/${id}`),
+        api.get("/api/admin/getDepartment")
       ]);
 
       if (empRes.data.success) {
@@ -102,8 +102,7 @@ const AdminEmployeeDetail = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await axios.put(`http://localhost:3000/api/admin/employee/${id}`, formData, {
-        withCredentials: true,
+      await api.put(`/api/admin/employee/${id}`, formData, {
       });
       showMsg("success", "Employee records updated successfully!");
     } catch (err) {

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+﻿import React, { useState, useEffect } from "react";
+import api from "../../utils/api";
 import { Users, Building2, Briefcase, FileText, TrendingUp, Bell, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -17,8 +17,7 @@ const AdminDashboardPage = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/admin/dashboard-stats", {
-        withCredentials: true,
+      const res = await api.get("/api/admin/dashboard-stats", {
       });
       setAdminStats(res.data);
     } catch (error) {

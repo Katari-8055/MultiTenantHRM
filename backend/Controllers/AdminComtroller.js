@@ -136,7 +136,11 @@ export const addProject = asyncHandler(async (req, res, next) => {
 
   const tenantId = req.tenantId;
   if (!tenantId) {
-    return next(new Error("Tenant ID missing in request", 400));
+    return res.status(400).json({ message: "Tenant ID missing in request" });
+  }
+
+  if (!name || !client || !managerId) {
+    return res.status(400).json({ message: "Project name, client, and managerId are required." });
   }
 
   const project = await prisma.project.create({

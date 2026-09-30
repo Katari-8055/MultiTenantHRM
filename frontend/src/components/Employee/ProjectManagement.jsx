@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { GlobleContext } from "../../context/GlobleContext.jsx";
 import { useRealTimeSync } from "../../hooks/useRealTimeSync.js";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,9 +14,8 @@ export default function ProjectManagement() {
 
   const fetchProjects = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:3000/api/admin/getEmpProject",
-        { withCredentials: true }
+      const res = await api.get(
+        "/api/admin/getEmpProject"
       );
       setEmpProject(res.data.projects || []);
     } catch (error) {

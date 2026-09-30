@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import axios from "axios";
+﻿import React, { useState, useContext } from "react";
+import api from "../../../utils/api";
 import toast from "react-hot-toast";
 import { GlobleContext } from "../../../context/GlobleContext";
 
@@ -13,7 +13,7 @@ const CreateDepartmentForm = ({ onClose }) => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:3000/api/admin/addDepartment", { name }, { withCredentials: true });
+      const res = await api.post("/api/admin/addDepartment", { name });
       console.log("Department created:", res.data);
       toast.success("Department created successfully!");
 
