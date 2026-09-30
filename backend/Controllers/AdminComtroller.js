@@ -41,6 +41,12 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
   const { page, limit, skip } = parsePagination(req.query);
 
+  const cacheKey = `dept:${tenantId}:${page}:${limit}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json(cached);
+  }
+
   const where = { tenantId };
   const [total, departments] = await Promise.all([
     prisma.department.count({ where }),
@@ -63,14 +69,18 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
   ]);
 
   const totalPages = Math.ceil(total / limit) || 1;
-  res.status(200).json({
+  const responseData = {
     success: true,
     items: departments,
     departments,
     total,
     page,
     totalPages
-  });
+  };
+
+  await setCache(cacheKey, responseData, 300);
+
+  res.status(200).json(responseData);
 });
 
 
@@ -80,6 +90,12 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
 export const getEmployee = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
   const { page, limit, skip } = parsePagination(req.query);
+
+  const cacheKey = `emp:${tenantId}:${page}:${limit}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.json(cached);
+  }
 
   const where = { tenantId };
   const [total, employees] = await Promise.all([
@@ -118,14 +134,18 @@ export const getEmployee = asyncHandler(async (req, res, next) => {
   ]);
 
   const totalPages = Math.ceil(total / limit) || 1;
-  res.json({
+  const responseData = {
     success: true,
     items: employees,
     employees,
     total,
     page,
     totalPages
-  });
+  };
+
+  await setCache(cacheKey, responseData, 300);
+
+  res.json(responseData);
 });
 
 //--------------------------------------------------------Delete Department------------------------------------//
@@ -184,6 +204,12 @@ export const getProject = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
   const { page, limit, skip } = parsePagination(req.query);
 
+  const cacheKey = `project:${tenantId}:${page}:${limit}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json(cached);
+  }
+
   const where = { tenantId };
   const [total, projects] = await Promise.all([
     prisma.project.count({ where }),
@@ -204,14 +230,18 @@ export const getProject = asyncHandler(async (req, res, next) => {
   ]);
 
   const totalPages = Math.ceil(total / limit) || 1;
-  res.status(200).json({
+  const responseData = {
     success: true,
     items: projects,
     projects,
     total,
     page,
     totalPages
-  });
+  };
+
+  await setCache(cacheKey, responseData, 300);
+
+  res.status(200).json(responseData);
 });
 
 
@@ -331,6 +361,12 @@ export const getEmployeeById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
 
+  const cacheKey = `emp:${tenantId}:${id}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json(cached);
+  }
+
   const employee = await prisma.employee.findFirst({
     where: {
       id,
@@ -362,10 +398,14 @@ export const getEmployeeById = asyncHandler(async (req, res, next) => {
     return res.status(404).json({ success: false, message: "Employee not found" });
   }
 
-  res.status(200).json({
+  const responseData = {
     success: true,
     employee
-  });
+  };
+
+  await setCache(cacheKey, responseData, 300);
+
+  res.status(200).json(responseData);
 });
 
 //-------------------------------------Update Employee-----------------------------------//

@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "../Services/MailServices.js";
-import { invalidateTenantDashboardCache } from "../config/redis.js";
+import { getCache, setCache, invalidateTenantDashboardCache } from "../config/redis.js";
 import config from "../config/config.js";
 
 //---------------------------------------------Register Tenant---------------------------------------------//
@@ -245,6 +245,12 @@ export const employeeLogin = asyncHandler(async (req, res, next) => {
 export const getMe = asyncHandler(async (req, res) => {
   const { userRole, tenantId, employeeId } = req;
 
+  const cacheKey = `profile:${tenantId}:${employeeId || 'admin'}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.json(cached);
+  }
+
   let user = null;
 
   // If Admin/Tenant
@@ -293,11 +299,15 @@ export const getMe = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  res.json({
+  const responseData = {
     success: true,
     user,
     role: userRole,
-  });
+  };
+
+  await setCache(cacheKey, responseData, 300);
+
+  res.json(responseData);
 });
 
 
@@ -471,6 +481,10 @@ export const changePassword = asyncHandler(async (req, res) => {
       where: { id: employeeId },
       data: { password: hashedNewPassword }
     });
+  }
+
+  if (tenantId) {
+    await invalidateTenantDashboardCache(tenantId);
   }
 
   res.json({ success: true, message: "Password updated successfully" });

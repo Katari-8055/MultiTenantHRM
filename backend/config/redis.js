@@ -136,7 +136,7 @@ export const setCache = async (key, value, ttlSeconds = 300) => {
 };
 
 /**
- * Invalidates all dashboard caches associated with a tenant.
+ * Invalidates all caches associated with a tenant (dashboard, dept, emp, project, profile).
  */
 export const invalidateTenantDashboardCache = async (tenantId) => {
   if (!tenantId) return;
@@ -147,11 +147,15 @@ export const invalidateTenantDashboardCache = async (tenantId) => {
     const directKeys = [
       `dashboard:admin:${tenantId}`,
       `dashboard:hr:${tenantId}`,
+      `profile:${tenantId}:admin`,
     ];
 
     let patternKeys = [];
     try {
-      patternKeys = await client.keys(`dashboard:*:${tenantId}*`);
+      const found = await client.keys(`*${tenantId}*`);
+      if (Array.isArray(found)) {
+        patternKeys = found;
+      }
     } catch (keyErr) {
       console.warn(`⚠️ [Cache] Pattern search failed for tenant ${tenantId}:`, keyErr.message);
     }
@@ -160,9 +164,12 @@ export const invalidateTenantDashboardCache = async (tenantId) => {
 
     if (allKeys.length > 0) {
       await client.del(...allKeys);
+      if (isDev) console.log(`🗑️ [Cache] Invalidated ${allKeys.length} keys for tenant ${tenantId}`);
     }
   } catch (err) {
     console.warn(`⚠️ [Cache] Failed to invalidate cache for tenant ${tenantId}:`, err.message);
   }
 };
+
+export const invalidateTenantCache = invalidateTenantDashboardCache;
 
