@@ -50,7 +50,7 @@ const config = {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
     },
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+    frontendUrl: (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, ''),
 };
 
 // Simple validation to ensure essential variables are present in production

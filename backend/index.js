@@ -25,9 +25,28 @@ const server = http.createServer(app);
 /* ======================
    SOCKET.IO SETUP
 ====================== */
+const allowedOrigins = [
+  config.frontendUrl,
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean);
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true;
+  const cleanOrigin = origin.replace(/\/$/, '');
+  if (allowedOrigins.some(o => o.replace(/\/$/, '') === cleanOrigin)) return true;
+  try {
+    const hostname = new URL(origin).hostname;
+    if (hostname.endsWith('.vercel.app') || hostname === 'localhost') return true;
+  } catch (e) {}
+  return false;
+};
+
 const io = new Server(server, {
   cors: {
-    origin: config.frontendUrl,
+    origin: (origin, callback) => {
+      callback(null, isOriginAllowed(origin));
+    },
     credentials: true,
   },
 });
@@ -42,7 +61,13 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  origin: config.frontendUrl || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
