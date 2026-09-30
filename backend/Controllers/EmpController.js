@@ -225,8 +225,11 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
         return res.status(400).json({ message: "Status is required" });
     }
 
-    const validStatuses = ['TODO', 'IN_PROGRESS', 'DONE'];
-    if (!validStatuses.includes(status)) {
+    let normalizedStatus = status;
+    if (normalizedStatus === 'DONE') normalizedStatus = 'COMPLETED';
+
+    const validStatuses = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
+    if (!validStatuses.includes(normalizedStatus)) {
         return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
 
@@ -240,7 +243,7 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
 
     const updatedTask = await prisma.task.update({
         where: { id: taskId },
-        data: { status },
+        data: { status: normalizedStatus },
         include: {
             creator: {
                 select: { id: true, firstName: true, lastName: true, email: true }

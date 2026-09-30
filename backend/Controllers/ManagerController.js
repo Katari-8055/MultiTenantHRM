@@ -474,9 +474,12 @@ export const updateTaskStatus = asyncHandler(async (req, res, next) => {
         return res.status(403).json({ message: "Unauthorized to update this task" });
     }
 
-    const validStatuses = ['TODO', 'IN_PROGRESS', 'DONE'];
+    let normalizedStatus = status;
+    if (normalizedStatus === 'DONE') normalizedStatus = 'COMPLETED';
+
+    const validStatuses = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
     const validPriorities = ['LOW', 'MEDIUM', 'HIGH'];
-    if (status && !validStatuses.includes(status)) {
+    if (normalizedStatus && !validStatuses.includes(normalizedStatus)) {
         return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
     if (priority && !validPriorities.includes(priority)) {
@@ -486,7 +489,7 @@ export const updateTaskStatus = asyncHandler(async (req, res, next) => {
     const updatedTask = await prisma.task.update({
         where: { id: taskId },
         data: {
-            status,
+            status: normalizedStatus,
             priority,
             title,
             description
