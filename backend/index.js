@@ -20,6 +20,11 @@ import { initRedisAdapter, closeRedisClients } from './config/redis.js';
 
 const PORT = config.port;
 const app = express();
+
+// Trust reverse proxy headers (e.g. Render, Vercel, Heroku, AWS ELB)
+// Required by express-rate-limit to read X-Forwarded-For correctly
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 
 /* ======================

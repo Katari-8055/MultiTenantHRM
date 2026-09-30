@@ -5,7 +5,7 @@ echo "Waiting for database to be ready..."
 
 # Run prisma migration or db push
 echo "Pushing database schema..."
-npx prisma db push
+npx prisma db push || echo "⚠️ Prisma db push failed (check DIRECT_URL / IPv6 connectivity), starting server anyway..."
 
 # Start the application
 echo "Starting backend server..."
