@@ -85,16 +85,26 @@ export const getUpstashRedis = () => {
   return upstashRedis;
 };
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 /**
  * Retrieves cached value by key.
  * Gracefully falls back (returns null) if Redis fails or key is missing.
+ * Logs HIT / MISS in development mode.
  */
 export const getCache = async (key) => {
   try {
     const client = getUpstashRedis();
-    if (!client) return null;
+    if (!client) {
+      if (isDev) console.log(`📭 [Cache] No client — MISS: ${key}`);
+      return null;
+    }
     const data = await client.get(key);
-    if (!data) return null;
+    if (!data) {
+      if (isDev) console.log(`❌ [Cache] MISS: ${key}`);
+      return null;
+    }
+    if (isDev) console.log(`✅ [Cache] HIT:  ${key}`);
     if (typeof data === 'string') {
       try {
         return JSON.parse(data);
@@ -111,6 +121,7 @@ export const getCache = async (key) => {
 
 /**
  * Caches a value with a specified TTL in seconds (defaults to 300s / 5 minutes).
+ * Logs SET in development mode.
  */
 export const setCache = async (key, value, ttlSeconds = 300) => {
   try {
@@ -118,6 +129,7 @@ export const setCache = async (key, value, ttlSeconds = 300) => {
     if (!client) return;
     const serialized = typeof value === 'string' ? value : JSON.stringify(value);
     await client.set(key, serialized, { ex: ttlSeconds });
+    if (isDev) console.log(`💾 [Cache] SET:  ${key} (TTL: ${ttlSeconds}s)`);
   } catch (err) {
     console.warn(`⚠️ [Cache] Failed to set key "${key}":`, err.message);
   }
