@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { GlobleContext } from "../../../context/GlobleContext";
 import api from "../../../utils/api";
@@ -21,9 +21,9 @@ import {
 } from "lucide-react";
 
 // Shared Components
-import ProfileLayout from "../../../components/Common/Profile/ProfileLayout";
-import ProfileField from "../../../components/Common/Profile/ProfileField";
-import ProfileCard from "../../../components/Common/Profile/ProfileCard";
+import ProfileLayout from "../../common/Profile/ProfileLayout";
+import ProfileField from "../../common/Profile/ProfileField";
+import ProfileCard from "../../common/Profile/ProfileCard";
 
 const AdminEmployeeDetail = () => {
   const { id } = useParams();

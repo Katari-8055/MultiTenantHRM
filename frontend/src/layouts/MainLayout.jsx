@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainSidebar from '../Sidebar/MainSidebar.jsx';
-import Navbar from '../components/Common/Navbar.jsx';
+import Navbar from '../components/common/Navbar.jsx';
 import { pageVariants } from '../utils/motion.js';
 
 const MainLayout = () => {

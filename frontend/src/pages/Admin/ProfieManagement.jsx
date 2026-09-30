@@ -1,5 +1,5 @@
 import React from 'react'
-import UnifiedProfileManagement from '../../components/Common/Profile/UnifiedProfileManagement'
+import UnifiedProfileManagement from '../../components/common/Profile/UnifiedProfileManagement'
 
 const ProfieManagement = () => {
   return (
