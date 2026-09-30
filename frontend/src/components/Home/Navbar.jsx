@@ -57,6 +57,12 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4 text-sm font-medium">
+            <Link
+              to="/demo"
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-semibold hover:opacity-90 transition shadow-md shadow-indigo-500/20 flex items-center gap-1.5"
+            >
+              <span>⚡</span> Demo
+            </Link>
             <Link to="/login" className="text-slate-300 hover:text-white transition-colors">
               Sign In
             </Link>
@@ -99,6 +105,13 @@ const Navbar = () => {
                 </a>
               ))}
               <hr className="border-white/10" />
+              <Link
+                to="/demo"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-semibold shadow-lg shadow-indigo-500/25"
+              >
+                ⚡ Live Demo (1-Click)
+              </Link>
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}

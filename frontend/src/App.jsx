@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/Auth/Login.jsx";
 import Home from "./pages/Home.jsx";
+import Demo from "./pages/Demo.jsx";
 import SignUp from "./pages/Auth/SignUp.jsx";
 import SetPassword from "./pages/Auth/SetPassword.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
@@ -39,6 +40,7 @@ const App = () => {
       <Routes>
 
       <Route path="/" element={<Home />} />
+      <Route path="/demo" element={<Demo />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/set-password" element={<SetPassword />} />

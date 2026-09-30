@@ -66,21 +66,41 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-md rounded-2xl p-8 w-full max-w-sm"
+        className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md border border-gray-100"
       >
-        <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
+          <p className="text-sm text-gray-500 mt-1">Sign in to your HRM account</p>
+        </div>
+
+        {/* Banner to /demo */}
+        <div className="mb-6 p-3.5 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⚡</span>
+            <div>
+              <p className="text-xs font-bold text-indigo-900">Recruiter / Demo Access</p>
+              <p className="text-[11px] text-indigo-600">Test without credentials</p>
+            </div>
+          </div>
+          <Link
+            to="/demo"
+            className="text-xs font-semibold text-indigo-700 hover:text-indigo-800 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-sm transition"
+          >
+            1-Click Demo →
+          </Link>
+        </div>
 
         {/* Role */}
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Role</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">Role</label>
           <select
             name="role"
             value={form.role}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2 outline-none"
+            className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
           >
             <option value="ADMIN">Admin</option>
             <option value="EMPLOYEE">Employee</option>
@@ -89,28 +109,28 @@ const Login = () => {
 
         {/* Email */}
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Email</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">Email</label>
           <input
             type="email"
             name="email"
             placeholder="Enter email"
             value={form.email}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2 outline-none focus:ring"
+            className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             required
           />
         </div>
 
         {/* Password */}
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Password</label>
+          <label className="block text-gray-700 text-sm font-medium mb-1">Password</label>
           <input
             type="password"
             name="password"
             placeholder="Enter password"
             value={form.password}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2 outline-none focus:ring"
+            className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             required
           />
         </div>
@@ -118,7 +138,7 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-2 rounded-lg mt-4 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-2.5 rounded-lg mt-4 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
           {loading ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
