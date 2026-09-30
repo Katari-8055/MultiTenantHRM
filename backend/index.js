@@ -70,13 +70,18 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'],
 };
 
 app.use(cors(corsOptions));
 
 // Security and Performance Middlewares
-app.use(helmet({ crossOriginResourcePolicy: false })); // Sets HTTP headers for security
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+  originAgentCluster: false,
+}));
 app.use(compression()); // Compress response bodies for better performance
 
 // Global Rate Limiter — applies to all /api routes (skipped in dev/testing if configured)
