@@ -1,59 +1,73 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
+import { parsePagination } from "../utils/pagination.js";
 
 
 //-------------------------------------Add Department-----------------------------------//
 
 export const addDepartment = asyncHandler(async (req, res, next) => {
-    const { name } = req.body;
-    const tenantId = req.tenantId;
+  const { name } = req.body;
+  const tenantId = req.tenantId;
 
-    const department = await prisma.department.create({
-        data: {
-            name,
-            tenant: {
-                connect: { id: tenantId }
-            }
-        }
-    });
-
-    if (req.io) {
-        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'departments' });
-        req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+  const department = await prisma.department.create({
+    data: {
+      name,
+      tenant: {
+        connect: { id: tenantId }
+      }
     }
+  });
 
-    res.status(201).json({
-        success: true,
-        message: "Department added successfully",
-        department
-    });
-    
+  if (req.io) {
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'departments' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+  }
+
+  res.status(201).json({
+    success: true,
+    message: "Department added successfully",
+    department
+  });
+
 })
 
 
 //----------------------------------------------Get Department------------------------------------//
 
 export const getDepartment = asyncHandler(async (req, res, next) => {
-    const tenantId = req.tenantId;
-    const departments = await prisma.department.findMany({
-        where: {
-            tenantId
-        },
-        include: {
-            employees: {
-                select: {
-                    id: true,
-                    firstName : true,
-                    email : true,
-                    role : true
-                }
-            }
+  const tenantId = req.tenantId;
+  const { page, limit, skip } = parsePagination(req.query);
+
+  const where = { tenantId };
+  const [total, departments] = await Promise.all([
+    prisma.department.count({ where }),
+    prisma.department.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        employees: {
+          select: {
+            id: true,
+            firstName: true,
+            email: true,
+            role: true
+          }
         }
-    });
-    res.status(200).json({
-        success: true,
-        departments
-    });
+      }
+    })
+  ]);
+
+  const totalPages = Math.ceil(total / limit) || 1;
+  res.status(200).json({
+    success: true,
+    items: departments,
+    departments,
+    total,
+    page,
+    totalPages
+  });
 });
 
 
@@ -62,41 +76,52 @@ export const getDepartment = asyncHandler(async (req, res, next) => {
 
 export const getEmployee = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
+  const { page, limit, skip } = parsePagination(req.query);
 
-  const employees = await prisma.employee.findMany({
-    where: {
-      tenantId,
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      phone: true,
-      dateOfBirth: true,
-      gender: true,
-      position: true,
-      salary: true,
-      dateOfJoining: true,
-      employmentType: true,
-      status: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-      tenantId: true,
-      departmentId: true,
-      department: {
-        select: {
-          id: true,
-          name: true,
+  const where = { tenantId };
+  const [total, employees] = await Promise.all([
+    prisma.employee.count({ where }),
+    prisma.employee.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        dateOfBirth: true,
+        gender: true,
+        position: true,
+        salary: true,
+        dateOfJoining: true,
+        employmentType: true,
+        status: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        tenantId: true,
+        departmentId: true,
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-  });
+    })
+  ]);
 
+  const totalPages = Math.ceil(total / limit) || 1;
   res.json({
     success: true,
+    items: employees,
     employees,
+    total,
+    page,
+    totalPages
   });
 });
 
@@ -114,27 +139,27 @@ export const addProject = asyncHandler(async (req, res, next) => {
     return next(new Error("Tenant ID missing in request", 400));
   }
 
- const project = await prisma.project.create({
-  data: {
-    name,
-    client,
-    status,
-    deadline: deadline ? new Date(deadline) : null,
-    tenant: { connect: { id: tenantId } },
-    manager: { connect: { id: managerId } },
-    members: {
-      connect: memberIds?.map((id) => ({ id })) || [],
+  const project = await prisma.project.create({
+    data: {
+      name,
+      client,
+      status,
+      deadline: deadline ? new Date(deadline) : null,
+      tenant: { connect: { id: tenantId } },
+      manager: { connect: { id: managerId } },
+      members: {
+        connect: memberIds?.map((id) => ({ id })) || [],
+      },
     },
-  },
-  include: {
-    manager: { select: { id: true, firstName: true, lastName: true, email: true } },
-    members: { select: { id: true, firstName: true, lastName: true, email: true } },
-  },
-});
+    include: {
+      manager: { select: { id: true, firstName: true, lastName: true, email: true } },
+      members: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
+  });
 
   if (req.io) {
-      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
-      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
 
   return res.status(201).json({
@@ -148,22 +173,35 @@ export const addProject = asyncHandler(async (req, res, next) => {
 
 export const getProject = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
+  const { page, limit, skip } = parsePagination(req.query);
 
-  const projects = await prisma.project.findMany({
-    where: { tenantId },
-    include: {
-      manager: {
-        select: { firstName: true, lastName: true, email: true }
-      },
-      members: {
-        select: { firstName: true, lastName: true, email: true }
-      },
-    }
-  });
+  const where = { tenantId };
+  const [total, projects] = await Promise.all([
+    prisma.project.count({ where }),
+    prisma.project.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        manager: {
+          select: { firstName: true, lastName: true, email: true }
+        },
+        members: {
+          select: { firstName: true, lastName: true, email: true }
+        },
+      }
+    })
+  ]);
 
+  const totalPages = Math.ceil(total / limit) || 1;
   res.status(200).json({
     success: true,
-    projects
+    items: projects,
+    projects,
+    total,
+    page,
+    totalPages
   });
 });
 
@@ -179,9 +217,9 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
   }
 
   const result = await prisma.project.deleteMany({
-    where: { 
-      id: projectId, 
-      tenantId 
+    where: {
+      id: projectId,
+      tenantId
     }
   });
 
@@ -190,8 +228,8 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
   }
 
   if (req.io) {
-      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
-      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
 
   res.status(200).json({
@@ -247,20 +285,20 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
   ]);
 
   const chartData = departmentStats.map(dept => ({
-      name: dept.name,
-      value: dept._count.employees
+    name: dept.name,
+    value: dept._count.employees
   }));
 
   res.status(200).json({
-      success: true,
-      stats: {
-          totalEmployees: employeeCount,
-          totalDepartments: departmentCount,
-          totalProjects: projectCount,
-          pendingLeaves: pendingLeaveCount
-      },
-      chartData,
-      recentActivity: recentEmployees
+    success: true,
+    stats: {
+      totalEmployees: employeeCount,
+      totalDepartments: departmentCount,
+      totalProjects: projectCount,
+      pendingLeaves: pendingLeaveCount
+    },
+    chartData,
+    recentActivity: recentEmployees
   });
 });
 
@@ -271,9 +309,9 @@ export const getEmployeeById = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
 
   const employee = await prisma.employee.findFirst({
-    where: { 
+    where: {
       id,
-      tenantId 
+      tenantId
     },
     select: {
       id: true,
@@ -312,18 +350,18 @@ export const getEmployeeById = asyncHandler(async (req, res, next) => {
 export const updateEmployee = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
-  const { 
-    firstName, 
-    lastName, 
-    phone, 
-    gender, 
-    dateOfBirth, 
-    position, 
-    salary, 
-    dateOfJoining, 
-    employmentType, 
-    status, 
-    departmentId 
+  const {
+    firstName,
+    lastName,
+    phone,
+    gender,
+    dateOfBirth,
+    position,
+    salary,
+    dateOfJoining,
+    employmentType,
+    status,
+    departmentId
   } = req.body;
 
   // Verify the employee belongs to this tenant
@@ -385,8 +423,8 @@ export const updateEmployee = asyncHandler(async (req, res, next) => {
   });
 
   if (req.io) {
-      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
-      req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
+    req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
   }
 
   res.status(200).json({

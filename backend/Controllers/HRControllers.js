@@ -4,41 +4,41 @@ import prisma from "../utils/client.js";
 //-----------------------------------------------------get Leave Requeste-----------------------------------------------------//
 
 export const getHRLeaves = asyncHandler(async (req, res) => {
-    const { tenantId } = req;
+  const { tenantId } = req;
 
-    // HR sees leaves where: (manager approved) OR (no manager assigned = direct to HR)
-    const leave = await prisma.leave.findMany({
-        where: {
-            tenantId,
-            OR: [
-                { managerStatus: 'APPROVED' },
-                { managerId: null }
-            ]
-        },
-        orderBy: { appliedAt: 'desc' },
-        include: {
-            employee: {
-                select: {
-                    firstName: true,
-                    lastName: true,
-                    email: true,
-                    role: true,
-                    department: { select: { name: true } }
-                }
-            },
-            manager: {
-                select: {
-                    firstName: true,
-                    lastName: true
-                }
-            }
+  // HR sees leaves where: (manager approved) OR (no manager assigned = direct to HR)
+  const leave = await prisma.leave.findMany({
+    where: {
+      tenantId,
+      OR: [
+        { managerStatus: 'APPROVED' },
+        { managerId: null }
+      ]
+    },
+    orderBy: { appliedAt: 'desc' },
+    include: {
+      employee: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          department: { select: { name: true } }
         }
-    });
+      },
+      manager: {
+        select: {
+          firstName: true,
+          lastName: true
+        }
+      }
+    }
+  });
 
-    res.status(200).json({
-        success: true,
-        leave
-    });
+  res.status(200).json({
+    success: true,
+    leave
+  });
 });
 
 //-----------------------------------------------------Update Leave Status-----------------------------------------------------//

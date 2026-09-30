@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seed.js",
-    "check-db": "node check_db.js"
+    "seed": "node seed.js"
   },
   "keywords": [],
   "author": "",
@@ -30,10 +29,8 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "nodemailer": "^7.0.10",
-    "pino-http": "^11.0.0",
     "redis": "^6.2.1",
-    "socket.io": "^4.8.1",
-    "winston": "^3.19.0"
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

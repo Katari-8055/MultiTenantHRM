@@ -1,47 +1,64 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
+import { parsePagination } from "../utils/pagination.js";
 
 export const getEmpProjects = asyncHandler(async (req, res, next) => {
     const { tenantId, employeeId } = req;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
 
-    const projects = await prisma.employee.findFirst({
-        where: { id: employeeId, tenantId },
-        select: {
-            projects: {
-                select: {
-                    id: true,
-                    name: true,
-                    client: true,
-                    description: true,
-                    status: true,
-                    deadline: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    manager: {
-                        select: {
-                            firstName: true,
-                            lastName: true,
-                            email: true
-                        }
-                    },
-                    members: {
-                        select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
-                            email: true
-                        }
+    const where = {
+        tenantId,
+        members: { some: { id: employeeId } }
+    };
+
+    const [total, projects] = await Promise.all([
+        prisma.project.count({ where }),
+        prisma.project.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                client: true,
+                description: true,
+                status: true,
+                deadline: true,
+                createdAt: true,
+                updatedAt: true,
+                manager: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                },
+                members: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true
                     }
                 }
             }
-        }
-    });
+        })
+    ]);
 
-    res.status(200).json({ projects: projects?.projects || [] });
+    const totalPages = Math.ceil(total / limit) || 1;
+    res.status(200).json({
+        success: true,
+        items: projects,
+        projects,
+        total,
+        page,
+        totalPages
+    });
 });
 
 //---------------------------------------Leave Added---------------------------------------//
@@ -114,42 +131,55 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
 
 export const getLeaves = asyncHandler(async (req, res, next) => {
     const { tenantId, employeeId } = req;
+    const { page, limit, skip } = parsePagination(req.query);
+
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
 
-    const leave = await prisma.employee.findFirst({
-        where: { id: employeeId, tenantId },
-        select: {
-            leaves:{
-                select: {
-                    id: true,
-                    type: true,
-                    startDate: true,
-                    endDate: true,
-                    reason: true,
-                    appliedAt: true,
-                    managerStatus: true,
-                    hrStatus: true,
-                    status: true,
-                        hr: {
-                            select: {
-                                firstName: true,
-                                lastName: true
-                            }
-                        },
-                        manager: {
-                            select: {
-                                firstName: true,
-                                lastName: true
-                            }
-                        }
+    const where = { tenantId, employeeId };
+    const [total, leaves] = await Promise.all([
+        prisma.leave.count({ where }),
+        prisma.leave.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { appliedAt: 'desc' },
+            select: {
+                id: true,
+                type: true,
+                startDate: true,
+                endDate: true,
+                reason: true,
+                appliedAt: true,
+                managerStatus: true,
+                hrStatus: true,
+                status: true,
+                hr: {
+                    select: {
+                        firstName: true,
+                        lastName: true
+                    }
+                },
+                manager: {
+                    select: {
+                        firstName: true,
+                        lastName: true
+                    }
                 }
             }
-        }
-    })
+        })
+    ]);
 
-    return res.status(200).json({ leaves: leave?.leaves || [] });
+    const totalPages = Math.ceil(total / limit) || 1;
+    return res.status(200).json({
+        success: true,
+        items: leaves,
+        leaves,
+        total,
+        page,
+        totalPages
+    });
 });
 
 //---------------------------------------Get Employee Tasks---------------------------------------//
@@ -193,6 +223,11 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
 
     if (!status) {
         return res.status(400).json({ message: "Status is required" });
+    }
+
+    const validStatuses = ['TODO', 'IN_PROGRESS', 'DONE'];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
 
     const task = await prisma.task.findFirst({

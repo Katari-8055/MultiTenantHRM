@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
+import { parsePagination } from "../utils/pagination.js";
 
 //-----------------------------------------------------Get Manager Projects-----------------------------------------------------//
 
@@ -178,31 +179,43 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
 
 export const getManagerLeaves = asyncHandler(async (req, res, next) => {
     const { tenantId, employeeId } = req;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
 
-    const leaves = await prisma.leave.findMany({
-        where: {
-            tenantId,
-            managerId: employeeId
-        },
-        orderBy: { appliedAt: 'desc' },
-        include: {
-            employee: {
-                select: {
-                    firstName: true,
-                    lastName: true,
-                    email: true,
-                    role: true,
-                    department: { select: { name: true } }
+    const where = { tenantId, managerId: employeeId };
+    const [total, leaves] = await Promise.all([
+        prisma.leave.count({ where }),
+        prisma.leave.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { appliedAt: 'desc' },
+            include: {
+                employee: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        role: true,
+                        department: { select: { name: true } }
+                    }
                 }
             }
-        }
-    });
+        })
+    ]);
 
-    res.status(200).json({ success: true, leaves });
+    const totalPages = Math.ceil(total / limit) || 1;
+    res.status(200).json({
+        success: true,
+        items: leaves,
+        leaves,
+        total,
+        page,
+        totalPages
+    });
 });
 
 //-----------------------------------------------------Update Manager Leave Status-----------------------------------------------------//
@@ -286,33 +299,43 @@ export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
 
 export const getManagerTasks = asyncHandler(async (req, res, next) => {
     const { tenantId, employeeId } = req;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
     }
 
-    const tasks = await prisma.task.findMany({
-        where: {
-            tenantId,
-            creatorId: employeeId
-        },
-        include: {
-            assignee: {
-                select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    email: true,
-                    role: true
+    const where = { tenantId, creatorId: employeeId };
+    const [total, tasks] = await Promise.all([
+        prisma.task.count({ where }),
+        prisma.task.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                assignee: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        role: true
+                    }
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    });
+        })
+    ]);
 
-    res.status(200).json({ success: true, tasks });
+    const totalPages = Math.ceil(total / limit) || 1;
+    res.status(200).json({
+        success: true,
+        items: tasks,
+        tasks,
+        total,
+        page,
+        totalPages
+    });
 });
 
 //-----------------------------------------------------Create Task-----------------------------------------------------//
@@ -386,6 +409,15 @@ export const updateTaskStatus = asyncHandler(async (req, res, next) => {
     // Role check: Only creator or assignee can update
     if (existingTask.creatorId !== employeeId && existingTask.assigneeId !== employeeId) {
         return res.status(403).json({ message: "Unauthorized to update this task" });
+    }
+
+    const validStatuses = ['TODO', 'IN_PROGRESS', 'DONE'];
+    const validPriorities = ['LOW', 'MEDIUM', 'HIGH'];
+    if (status && !validStatuses.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+    }
+    if (priority && !validPriorities.includes(priority)) {
+        return res.status(400).json({ message: `Invalid priority. Must be one of: ${validPriorities.join(', ')}` });
     }
 
     const updatedTask = await prisma.task.update({

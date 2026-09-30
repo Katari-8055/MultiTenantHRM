@@ -45,7 +45,7 @@ app.use((req, res, next) => {
 app.use(helmet()); // Sets various HTTP headers for security
 app.use(compression()); // Compress response bodies for better performance
 
-// Global Rate Limiter
+// Global Rate Limiter — applies to all /api routes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per window
@@ -53,7 +53,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again after 15 minutes',
 });
-app.use('/api/', limiter); // Apply rate limit to all /api routes
+app.use('/api/', limiter);
 
 app.use(cors({
   origin: config.frontendUrl,
