@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
 import { parsePagination } from "../utils/pagination.js";
+import { getCache, setCache, invalidateTenantDashboardCache } from "../config/redis.js";
 
 export const getEmpProjects = asyncHandler(async (req, res, next) => {
     const { tenantId, employeeId } = req;
@@ -113,6 +114,8 @@ export const applyLeave = asyncHandler(async (req, res, next) => {
 
         return { newLeave: createdLeave, notification: createdNotification };
     });
+
+    await invalidateTenantDashboardCache(tenantId);
 
     if (req.io) {
         if (resolvedManagerId) {
@@ -265,6 +268,8 @@ export const updateEmpTaskStatus = asyncHandler(async (req, res, next) => {
         }
     });
 
+    await invalidateTenantDashboardCache(tenantId);
+
     if (req.io) {
         req.io.to(updatedTask.creatorId).emit("new-notification", notification);
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
@@ -283,6 +288,12 @@ export const getEmpDashboardStats = asyncHandler(async (req, res, next) => {
 
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
+    }
+
+    const cacheKey = `dashboard:emp:${tenantId}:${employeeId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+        return res.status(200).json(cached);
     }
 
     // Execute all independent dashboard queries concurrently
@@ -338,7 +349,7 @@ export const getEmpDashboardStats = asyncHandler(async (req, res, next) => {
         })
     ]);
 
-    res.status(200).json({
+    const responseData = {
         success: true,
         stats: {
             pendingTasks: taskCount,
@@ -348,5 +359,10 @@ export const getEmpDashboardStats = asyncHandler(async (req, res, next) => {
         },
         recentTasks,
         activeProjects
-    });
+    };
+
+    // Cache for 5 minutes (300 seconds)
+    await setCache(cacheKey, responseData, 300);
+
+    res.status(200).json(responseData);
 });

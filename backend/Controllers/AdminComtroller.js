@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
 import { parsePagination } from "../utils/pagination.js";
+import { getCache, setCache, invalidateTenantDashboardCache } from "../config/redis.js";
 
 
 //-------------------------------------Add Department-----------------------------------//
@@ -17,6 +18,8 @@ export const addDepartment = asyncHandler(async (req, res, next) => {
       }
     }
   });
+
+  await invalidateTenantDashboardCache(tenantId);
 
   if (req.io) {
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'departments' });
@@ -161,6 +164,8 @@ export const addProject = asyncHandler(async (req, res, next) => {
     },
   });
 
+  await invalidateTenantDashboardCache(tenantId);
+
   if (req.io) {
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
@@ -231,6 +236,8 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
     return res.status(404).json({ success: false, message: "Project not found or unauthorized to delete" });
   }
 
+  await invalidateTenantDashboardCache(tenantId);
+
   if (req.io) {
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
@@ -248,6 +255,13 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
 
 export const getDashboardStats = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
+
+  // Check cache first
+  const cacheKey = `dashboard:admin:${tenantId}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json(cached);
+  }
 
   // Execute all independent dashboard queries concurrently
   const [
@@ -293,7 +307,7 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
     value: dept._count.employees
   }));
 
-  res.status(200).json({
+  const responseData = {
     success: true,
     stats: {
       totalEmployees: employeeCount,
@@ -303,7 +317,12 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
     },
     chartData,
     recentActivity: recentEmployees
-  });
+  };
+
+  // Cache for 5 minutes (300 seconds)
+  await setCache(cacheKey, responseData, 300);
+
+  res.status(200).json(responseData);
 });
 
 //-------------------------------------Get Employee By ID-----------------------------------//
@@ -425,6 +444,8 @@ export const updateEmployee = asyncHandler(async (req, res, next) => {
       department: true,
     }
   });
+
+  await invalidateTenantDashboardCache(tenantId);
 
   if (req.io) {
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });

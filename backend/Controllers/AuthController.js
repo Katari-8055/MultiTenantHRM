@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "../Services/MailServices.js";
-import { addEmailJob } from "../Services/EmailQueue.js";
+import { invalidateTenantDashboardCache } from "../config/redis.js";
 import config from "../config/config.js";
 
 //---------------------------------------------Register Tenant---------------------------------------------//
@@ -116,31 +116,50 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
   const numericSalary = parseFloat(salary);
 
   const token = crypto.randomBytes(32).toString("hex");
+  const setupTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
-  const newEmployee = await prisma.employee.create({
-    data: {
-      firstName,
-      lastName,
+  const frontendBase = config.frontendUrl || 'http://localhost:5173';
+  const link = `${frontendBase}/set-password?token=${token}`;
+
+  // Step 1: Send invitation email first.
+  // Employee must be created ONLY if the required email is successfully sent.
+  try {
+    await sendEmail(
       email,
-      role,
-      salary: numericSalary,
-      departmentId: departmentRecord.id,
-      tenantId: tenant.id,
-      setupToken: token,
-      setupTokenExpiry: new Date(Date.now() + 1000 * 60 * 60 * 24),
-    },
-    include: {
-      department: true
-    }
+      "Welcome to HR Management System",
+      `Hello ${firstName},\n\nYour account has been created under the ${departmentRecord.name} department.\nPlease set your password using the link below:\n\n${link}\n\nThis link will expire in 24 hours.`
+    );
+  } catch (emailError) {
+    console.error("❌ Email sending failed. Aborting employee creation:", emailError.message || emailError);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send invitation email. Employee was not created.",
+      error: emailError.message || "Email delivery failed"
+    });
+  }
+
+  // Step 2: Create Employee only after successful email delivery using a transaction
+  const newEmployee = await prisma.$transaction(async (tx) => {
+    return await tx.employee.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        role,
+        salary: numericSalary,
+        departmentId: departmentRecord.id,
+        tenantId: tenant.id,
+        setupToken: token,
+        setupTokenExpiry,
+      },
+      include: {
+        department: true
+      }
+    });
   });
 
-  const link = `http://localhost:5173/set-password?token=${token}`;
-
-  addEmailJob({
-    to: newEmployee.email,
-    subject: "Welcome to HR Management System",
-    text: `Hello ${newEmployee.firstName},\n\nYour account has been created under the ${departmentRecord.name} department.\nPlease set your password using the link below:\n\n${link}\n\nThis link will expire in 24 hours.`
-  });
+  // Step 3: Invalidate tenant dashboard cache
+  await invalidateTenantDashboardCache(tenant.id);
 
   if (req.io) {
     req.io.to(`tenant_${tenant.id}`).emit("refresh-data", { type: 'employees' });
@@ -149,7 +168,7 @@ export const addEmployee = asyncHandler(async (req, res, next) => {
 
   const { password: _p, setupToken: _st, setupTokenExpiry: _ste, ...safeEmployee } = newEmployee;
 
-  return res.json({
+  return res.status(201).json({
     success: true,
     message: "Employee added successfully and verification link sent.",
     employee: safeEmployee,
@@ -323,6 +342,8 @@ export const registerEmployeesBulk = asyncHandler(async (req, res, next) => {
     skipDuplicates: true, // avoid error on duplicate email
   });
 
+  await invalidateTenantDashboardCache(tenantId);
+
   if (req.io) {
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'employees' });
     req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
@@ -402,6 +423,10 @@ export const updateMe = asyncHandler(async (req, res) => {
         }
       }
     });
+  }
+
+  if (tenantId) {
+    await invalidateTenantDashboardCache(tenantId);
   }
 
   if (req.io && tenantId) {

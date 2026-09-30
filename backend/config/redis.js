@@ -1,5 +1,6 @@
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
+import { Redis } from '@upstash/redis';
 import config from './config.js';
 
 let pubClient = null;
@@ -57,3 +58,99 @@ export const closeRedisClients = async () => {
     }
   }
 };
+
+/* ==========================================================================
+   UPSTASH REDIS REST CACHING (DASHBOARD)
+   ========================================================================== */
+
+let upstashRedis = null;
+
+/**
+ * Initializes or returns the singleton Upstash Redis client.
+ */
+export const getUpstashRedis = () => {
+  if (upstashRedis) return upstashRedis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL || config.upstash?.url;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || config.upstash?.token;
+
+  if (url && token) {
+    try {
+      upstashRedis = new Redis({ url, token });
+    } catch (err) {
+      console.warn('⚠️ [Upstash Redis] Failed to initialize client:', err.message);
+      upstashRedis = null;
+    }
+  }
+  return upstashRedis;
+};
+
+/**
+ * Retrieves cached value by key.
+ * Gracefully falls back (returns null) if Redis fails or key is missing.
+ */
+export const getCache = async (key) => {
+  try {
+    const client = getUpstashRedis();
+    if (!client) return null;
+    const data = await client.get(key);
+    if (!data) return null;
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch {
+        return data;
+      }
+    }
+    return data;
+  } catch (err) {
+    console.warn(`⚠️ [Cache] Failed to get key "${key}", falling back to DB:`, err.message);
+    return null;
+  }
+};
+
+/**
+ * Caches a value with a specified TTL in seconds (defaults to 300s / 5 minutes).
+ */
+export const setCache = async (key, value, ttlSeconds = 300) => {
+  try {
+    const client = getUpstashRedis();
+    if (!client) return;
+    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+    await client.set(key, serialized, { ex: ttlSeconds });
+  } catch (err) {
+    console.warn(`⚠️ [Cache] Failed to set key "${key}":`, err.message);
+  }
+};
+
+/**
+ * Invalidates all dashboard caches associated with a tenant.
+ */
+export const invalidateTenantDashboardCache = async (tenantId) => {
+  if (!tenantId) return;
+  try {
+    const client = getUpstashRedis();
+    if (!client) return;
+
+    const directKeys = [
+      `dashboard:admin:${tenantId}`,
+      `dashboard:hr:${tenantId}`,
+    ];
+
+    let patternKeys = [];
+    try {
+      patternKeys = await client.keys(`dashboard:*:${tenantId}*`);
+    } catch (keyErr) {
+      console.warn(`⚠️ [Cache] Pattern search failed for tenant ${tenantId}:`, keyErr.message);
+    }
+
+    const allKeys = Array.from(new Set([...directKeys, ...(Array.isArray(patternKeys) ? patternKeys : [])]));
+
+    if (allKeys.length > 0) {
+      await client.del(...allKeys);
+    }
+  } catch (err) {
+    console.warn(`⚠️ [Cache] Failed to invalidate cache for tenant ${tenantId}:`, err.message);
+  }
+};
+

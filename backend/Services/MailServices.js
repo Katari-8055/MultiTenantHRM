@@ -6,31 +6,30 @@ const cleanPass = config.email.pass ? config.email.pass.replace(/\s+/g, '') : ''
 
 const transportOptions = process.env.EMAIL_HOST
   ? {
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 587,
-      secure: false,
-      auth: {
-        user: config.email.user,
-        pass: cleanPass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 587,
+    secure: false,
+    auth: {
+      user: config.email.user,
+      pass: cleanPass,
+    },
+    tls: {
+      rejectUnauthorized: false
     }
+  }
   : {
-      service: "gmail",
-      auth: {
-        user: config.email.user,
-        pass: cleanPass,
-      },
-    };
+    service: "gmail",
+    auth: {
+      user: config.email.user,
+      pass: cleanPass,
+    },
+  };
 
 const transporter = nodemailer.createTransport(transportOptions);
 
 export const sendEmail = async (to, subject, text) => {
   if (!config.email.user || !config.email.pass) {
-    console.warn("⚠️ [Mail Service] EMAIL_USER or EMAIL_PASSWORD missing in config. Email sending skipped.");
-    return;
+    throw new Error("Email service is not configured (EMAIL_USER or EMAIL_PASSWORD missing)");
   }
 
   const mailOptions = {
@@ -48,4 +47,4 @@ export const sendEmail = async (to, subject, text) => {
     throw error;
   }
 };
-
+

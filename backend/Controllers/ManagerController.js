@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
 import { parsePagination } from "../utils/pagination.js";
+import { getCache, setCache, invalidateTenantDashboardCache } from "../config/redis.js";
 
 //-----------------------------------------------------Get Manager Projects-----------------------------------------------------//
 
@@ -134,6 +135,8 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
         }
     });
 
+    await invalidateTenantDashboardCache(tenantId);
+
     if (req.io) {
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'projects' });
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
@@ -149,6 +152,12 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
 
     if (!tenantId || !employeeId) {
         return res.status(400).json({ message: "tenantId and employeeId are required" });
+    }
+
+    const cacheKey = `dashboard:manager:${tenantId}:${employeeId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+        return res.status(200).json(cached);
     }
 
     // Execute all independent queries concurrently
@@ -225,7 +234,7 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
         status: leave.managerStatus // showing manager's decision status
     }));
 
-    res.status(200).json({
+    const responseData = {
         success: true,
         stats: {
             totalProjects,
@@ -235,7 +244,12 @@ export const getManagerDashboardStats = asyncHandler(async (req, res, next) => {
         },
         chartData: projectChartData,
         recentActivity: recentLeavesFormatted
-    });
+    };
+
+    // Cache for 5 minutes (300 seconds)
+    await setCache(cacheKey, responseData, 300);
+
+    res.status(200).json(responseData);
 });
 
 //-----------------------------------------------------Get Manager Leaves-----------------------------------------------------//
@@ -349,6 +363,8 @@ export const updateManagerLeaveStatus = asyncHandler(async (req, res, next) => {
         return res.status(result.status).json({ message: result.message });
     }
 
+    await invalidateTenantDashboardCache(tenantId);
+
     if (req.io) {
         req.io.to(result.updatedLeave.employeeId).emit("new-notification", result.notification);
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'leaves' });
@@ -442,6 +458,8 @@ export const createTask = asyncHandler(async (req, res, next) => {
         }
     });
 
+    await invalidateTenantDashboardCache(tenantId);
+
     if (req.io) {
         req.io.to(assigneeId).emit("new-notification", notification);
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
@@ -509,6 +527,8 @@ export const updateTaskStatus = asyncHandler(async (req, res, next) => {
             userId: targetId,
             type: "TASK"
         });
+        await invalidateTenantDashboardCache(tenantId);
+
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'stats' });
     }
@@ -533,6 +553,8 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
     await prisma.task.delete({
         where: { id: taskId }
     });
+
+    await invalidateTenantDashboardCache(tenantId);
 
     if (req.io) {
         req.io.to(`tenant_${tenantId}`).emit("refresh-data", { type: 'tasks' });

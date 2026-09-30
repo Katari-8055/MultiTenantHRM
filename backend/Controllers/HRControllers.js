@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import prisma from "../utils/client.js";
+import { getCache, setCache, invalidateTenantDashboardCache } from "../config/redis.js";
 
 //-----------------------------------------------------get Leave Requeste-----------------------------------------------------//
 
@@ -116,6 +117,8 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
     return { leave: updatedLeave, notification: newNotification };
   });
 
+  await invalidateTenantDashboardCache(tenantId);
+
   // ⚡ Emit real-time event
   if (req.io) {
     req.io.to(leave.employeeId).emit("new-notification", notification);
@@ -132,6 +135,12 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
 
 export const getHrDashboardStats = asyncHandler(async (req, res, next) => {
   const tenantId = req.tenantId;
+
+  const cacheKey = `dashboard:hr:${tenantId}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json(cached);
+  }
 
   // Execute all independent queries concurrently
   const [
@@ -205,7 +214,7 @@ export const getHrDashboardStats = asyncHandler(async (req, res, next) => {
     status: leave.status,
   }));
 
-  res.status(200).json({
+  const responseData = {
     success: true,
     stats: {
       totalEmployees: employeeCount,
@@ -215,6 +224,11 @@ export const getHrDashboardStats = asyncHandler(async (req, res, next) => {
     },
     chartData,
     recentActivity
-  });
+  };
+
+  // Cache for 5 minutes (300 seconds)
+  await setCache(cacheKey, responseData, 300);
+
+  res.status(200).json(responseData);
 });
 

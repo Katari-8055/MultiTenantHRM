@@ -46,6 +46,10 @@ const config = {
         port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : undefined,
         password: process.env.REDIS_PASSWORD,
     },
+    upstash: {
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    },
     email: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
